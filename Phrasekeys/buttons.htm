@@ -1,0 +1,30 @@
+<!-- saved from url=(0016)http://localhost -->
+<SCRIPT language = "VBScript">
+	Sub OKClicked
+		If UserOption(0).Checked Then
+			ButtonClicked.Value = "Loc"
+		End If
+		
+		If UserOption(1).Checked Then
+			ButtonClicked.Value = "Rem"
+		End If 
+		
+		If UserOption(2).Checked Then
+			ButtonClicked.Value = "Mult"
+		End If
+	End Sub
+	
+	Sub CancelClicked
+		ButtonClicked.Value = "Cancelled"
+	End Sub
+</SCRIPT>
+
+<BODY STYLE="background:'black'; overflow:hidden; margin:0; padding:0; font:12pt bold arial; color:#00ccff;">
+	<BR> &nbsp; &nbsp;
+	<input type="radio" name="UserOption" checked=TRUE>Local Machine<BR> &nbsp; &nbsp;
+	<input type="radio" name="UserOption">Remote Machine<BR> &nbsp; &nbsp;
+	<input type="radio" name="UserOption">List of Machines<BR><HR> &nbsp; &nbsp; 
+	<input type="button" value="OK" onClick="OKClicked"> &nbsp; &nbsp;
+	<input type="button" value="Cancel" onClick="CancelClicked">
+	<input type="hidden" name="ButtonClicked">
+</BODY>	
