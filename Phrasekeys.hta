@@ -1,0 +1,199 @@
+<HTML>
+  <HEAD>
+  <TITLE>Joey's Phrasekeys</TITLE>
+      <HTA:APPLICATION
+      Application ID = "Phrasekeys"
+      APPLICATIONNAME = "Phrasekeys"
+      BORDER = "Thick"
+      BORDERSTYLE = "Complex"
+      CAPTION = "Yes"
+      CONTEXTMENU = "no"
+      ICON = "C:\Phrasekeys\JPK.ico"
+      INNERBORDER = "yes"
+      MAXIMIZEBUTTON = "yes"
+      MINIMIZEBUTTON = "yes"
+      Scroll="No"
+      SELECTION = "No"
+      SHOWINTASKBAR = "Yes"
+      SINGLEINSTANCE = "Yes"
+      SYSMENU = "yes"
+      VERSION = "2.2"
+      WINDOWSTATE = "Normal"
+      />
+  </HEAD>
+  <!-- GradientType=0 - Top to Bottom, GradientType=1 - Left to Right -->
+  <BODY STYLE=" margin:0; padding:0; font:9pt arial; color:#00ccff; filter:progid:DXImageTransform.Microsoft.Gradient (GradientType=0, StartColorStr='#333333', EndColorStr='#000000')">
+    <SCRIPT LANGUAGE="VBScript">
+  Dim intKillTime, intLeft, intTop
+  Dim fso, oFile, objIni
+  Dim strPhrase, strDir, strReadme, strAns, strResult, strTarget, strDestinationLocation, strSourceFolder, strPrint
+  Dim strSourcePath, StrMessage, strDestinationPath, MinutesOld
+  Dim objShell, objFso, objAns, objFile, objPing, objSourceFolder, objLogFile, objSource, objFileDest, objDestFolder
+  Dim objSubfolder, objDestination
+      Set fso = CreateObject("Scripting.FileSystemObject")
+      Set oFile = fso.OpenTextFile( "TextArea.txt",8,true)
+      Set objShell = CreateObject("WScript.Shell") 
+	  strDir = ("C:\Phrasekeys")
+'<!--#################[ Set Dialog Size and Position ]######################-->
+      Sub StartUp()
+          window.resizeTo 396,136
+	  End Sub
+      StartUp
+ '<!--#################[ Window OnLoad ]######################-->	  
+	  Sub Window_Onload
+		window.offscreenBuffering = True
+		
+		If Not fso.FileExists("C:\Phrasekeys\PKS.ini") Then
+			Set FileIni = fso.OpenTextFile("C:\Phrasekeys\PKS.ini", 2, TRUE)
+			FileIni.WriteLine("20,20")
+		End If
+		Const ForReading = 1			
+		Set objIni = fso.OpenTextFile("C:\Phrasekeys\PKS.ini", ForReading)		
+		strContents = objIni.ReadAll
+		objIni.Close
+		
+		arrContents = Split(strContents, ",")
+		window.moveTo arrContents(0), arrContents(1)
+		
+		Call PopulateDropDown
+		Call PopulateEmails
+		Collect("PHRASEKEYS STANDALONE launched")
+	  End Sub
+'<!--#############################[ Sub Populate Dropdown]#############################-->
+	 Sub PopulateDropDown
+	 Set objFile = nothing
+	 Dim strPath, strDirectory, objFile, colFiles
+	 Set objFso = CreateObject("Scripting.FileSystemObject")
+	 strDirectory = ("C:\Phrasekeys\Phrases")
+	 Set colFiles = objFso.GetFolder(strDirectory).Files
+	 
+	 For Each objFile in colFiles
+		Set objOption = Document.CreateElement("OPTION")
+		objOption.Text = objFso.GetBaseName(objFile.Name)
+		objOption.Value = objFso.GetBaseName(objFile.Name)
+		myList.Add(objOption)
+	 Next
+	 
+	 End Sub
+'<!--#############################[ Sub Populate Emails Dropdown]#############################-->
+	Sub PopulateEmails
+	 Set objFile = nothing
+	 Dim strPath, strDirectory, objFile, colFiles
+	 Set objFso = CreateObject("Scripting.FileSystemObject")
+	 strDirectory = ("C:\Phrasekeys\Emails")
+	 Set colFiles = objFso.GetFolder(strDirectory).Files
+	 
+	 For Each objFile in colFiles
+		Set objEOption = Document.CreateElement("OPTION")
+		objEOption.Text = objFso.GetBaseName(objFile.Name)
+		objEOption.Value = objFso.GetBaseName(objFile.Name)
+		myEmails.Add(objEOption)
+	 Next
+	 
+	 End Sub
+'<!--#############################[ Sub Phrasekeys ]#############################-->	
+	Sub PkWord
+	Dim strPath, strDirectory, strPk
+	Set objFSO = CreateObject("Scripting.FileSystemObject")
+	strPk = mylist.Value
+	If strPk = "" Then
+		Exit Sub
+	End If
+	strDirectory = ("C:\Phrasekeys\Phrases")
+	Set strPath = objFSO.OpenTextFile("C:\Phrasekeys\Phrases\" & strPk & ".txt")							
+	strPrint = strPath.ReadLine																			
+	PassPhrase()
+	Collect("PHRASEKEYS STANDALONE: Notes generator used")
+	End Sub
+'<!--#############################[ Sub Phrasekeys Email ]#############################-->	
+	Sub Email
+		strEmFile = myEmails.Value
+		If strEmFile = "" Then
+			Exit Sub
+		End If
+		strClient = InputBox("What is the ATTUID of the client you wish to email?")
+			If strClient = "" Then
+				Exit Sub
+			End If
+		strReceipt = MsgBox("Would you like a read receipt request?", vbYesNo)
+			If strReceipt = vbYes Then
+				strReceipt = "True"
+			Else
+				strReceipt = "False"
+			End If
+		Set objExcel = CreateObject("Excel.Application")
+		Set objWorkbook = objExcel.Workbooks.Open("C:\Phrasekeys\Emails\" & strEmFile & ".xlsx")
+		Set objWorksheet = objWorkbook.Sheets("Sheet1")
+		Set objSubject = objWorksheet.cells(1, 1)
+		Set objBody = objWorksheet.cells(3, 1)
+		Set objApp = CreateObject("Outlook.Application")
+		Set objMail = objApp.CreateItem(olMailItem)
+			With objMail
+				.To = strClient & "@att.com"
+				.Subject = objSubject.Value
+				.ReadReceiptRequested = strReceipt
+				.Body = objBody.Value
+			End With
+		objMail.Display
+		objWorkbook.Close
+		Collect("PHRASEKEYS STANDALONE: Email generator used")
+	End Sub
+'<!--#############################[ Sub to collect usage stats ]#############################-->
+	Sub Collect(strHmm)
+		Set objInfFile = fso.OpenTextFile("C:\Phrasekeys\info.txt", 8, True, 0)
+		objInfFile.WriteLine Now() & " :: " & strHmm
+		objInfFile.Close
+	End Sub
+'<!--#############################[ Sub for usage reporting ]#############################-->
+	Sub Report
+		Set objRepFile = fso.OpenTextFile("\\txdlls2cdfile08\alma_info\Joey_Thumb\JoeyScripts\shortkeys\reporting.txt", 8, True, 0)
+		Set objSrcTxt = fso.OpenTextFile("C:\Phrasekeys\info.txt", 1)
+		'Set objRepLine = objSrcTxt.ReadAll
+			Do Until objSrcTxt.AtEndOfStream
+				strRepTxt = objSrcTxt.Readline()
+				objRepFile.WriteLine strRepTxt
+			Loop
+		objSrcTxt.Close
+		objRepFile.Close
+		Set objSrcTxt = fso.OpenTextFile("C:\Phrasekeys\info.txt", 2, TRUE)
+		objSrcTxt.Write ""
+		objSrcTxt.Close
+	End Sub
+'<!--#############################[ Quit ]#############################-->
+    Sub Quit_onclick
+      Window.Close
+    End Sub
+	'<!--#################[ Window Before Unload ]######################-->  
+	Sub Window_onBeforeUnload
+		intLeft = window.screenLeft
+		intTop = window.screenTop
+		
+		Const ForWriting = 2
+		Set objIni = fso.OpenTextFile("C:\Phrasekeys\PKS.ini", ForWriting)
+		objIni.Writeline intLeft & "," & intTop
+		objIni.Close
+		Call Report
+	End Sub
+</script>
+<script type="text/Javascript">
+function PassPhrase()
+{
+window.clipboardData.setData("Text",strPrint);
+}
+</script>
+<TABLE align="center" width="100%" border=1><TR><TD>
+<CENTER>	
+  
+  <DIV style="float:left;"> &nbsp; &nbsp; &nbsp;<FONT SIZE=1><B>Notes Generator</B></FONT></DIV>&nbsp; &nbsp; &nbsp;<FONT SIZE=1><B>Email Generator</B></FONT><BR>
+  <select name="myList" id="myList" onChange="PkWord" size="1" style="width:100px">
+  </select> &nbsp; &nbsp;
+  <select name="myEmails" id="myEmails" onChange="Email" size="1" style="width:220px">
+  </select>
+  <HR>
+  <!--==--==--==--==--==--==--==-- Quit --==--==--==--==--==--==-->
+  <INPUT TYPE=BUTTON style="width:90px; background-color:#00ccff; color:#000000; font: bold;" NAME="Quit" VALUE=" Quit ">
+  </CENTER>
+  </TABLE>
+  </BODY>
+  </HTML>
+  
