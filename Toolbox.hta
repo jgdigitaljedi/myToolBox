@@ -574,7 +574,7 @@
 	
 	On Error Resume Next
 	Set objGroup = GetObject("WinNT://" & strComputer & "/Administrators")
-	strUser = InputBox("Enter the ID of the user or the name of the group your wish to add to the admin group on " & strComputer, "Who to add?")
+	strUser = InputBox("Enter the ID of the user or the name of the group you wish to add to the admin group on " & strComputer, "Who to add?")
 	If strUser = "" Then
 		Exit Sub
 	End If
@@ -583,11 +583,46 @@
 	objGroup.Add(objUser.ADsPath)
 	
 	If Err.Number <> 0 Then
-		MsgBox "The user/group was not added to the admin group due to an error. Check your connection to the target machine.", vbOkOnly+vbExclamation, "ERROR!"
-		Exit Sub
+		If Err.Number = "-2147023518" Then
+			MsgBox "The user is already a member of that group", ,"No Need!"
+			Exit Sub
+		Else
+			MsgBox "The user/group was not added to the admin group due to an error# " & Err.Number & " . Check your connection to the target machine. Also note that this only works for ITSERVICES users and groups and it will return this message if the user is already a member of that group.", vbOkOnly+vbExclamation, "ERROR!"
+			Exit Sub
+		End If
 	Else
 		strComputer = "this machine"
 		MsgBox strUser & " was added to the local administrator group on " & strComputer & ".", ,"Success!"
+	End If
+	End Sub
+'<!--#######################[ Sub to add user or group to local remote desktop users group ]#######################-->
+Sub RemUserG
+	strComputer = CompName.Value
+	If strComputer = "" Then
+		strComputer = "."
+	End If
+	
+	On Error Resume Next
+	Set objGroup = GetObject("WinNT://" & strComputer & "/Remote Desktop Users, group")
+	strUser = InputBox("Enter the ID of the user or the name of the group you wish to add to the Remote Users group on " & strComputer, "Who to add?")
+	If strUser = "" Then
+		Exit Sub
+	End If
+	strDom = InputBox( "Enter the full domain name in which the user ID is located.")
+	Set objUser = GetObject("WinNT://" & strDom & "/" & strUser)
+	objGroup.Add(objUser.ADsPath)
+	
+	If Err.Number <> 0 Then
+		If Err.Number = "-2147023518" Then
+			MsgBox "The user is already a member of that group", ,"No Need!"
+			Exit Sub
+		Else
+			MsgBox "The user/group was not added to the Remote Users group due to an error# " & Err.Number & " . Check your connection to the target machine. Also note that this only works for ITSERVICES users and groups and it will return this message if the user is already a member of that group.", vbOkOnly+vbExclamation, "ERROR!"
+			Exit Sub
+		End If
+	Else
+		strComputer = "this machine"
+		MsgBox strUser & " was added to the local Remote Users group on " & strComputer & ".", ,"Success!"
 	End If
 	End Sub
 '<!--#######################[ Sub Defrag ]#######################-->
