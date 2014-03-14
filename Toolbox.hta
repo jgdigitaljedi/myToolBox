@@ -1614,6 +1614,298 @@ End Sub
 		objInfFile.WriteLine Now() & " :: " & strHmm
 		objInfFile.Close
 	End Sub
+'<!--#############################[ populate 2nd task list ]#############################-->
+	Sub popList
+		listArr2 = Array(" ", "SW B/F", "DCS CTS SW B/F", "DCS Install", "DCS M/A/C", "DCS Data Mig", "DCS Exec Sup", "DCS CTS IMAC")
+		listArr4 = Array(" ", "SW B/F", "DCS CTS SW B/F", "DCS Install", "DCS M/A/C", "DCS Data Mig", "DCS Exec Sup")
+		listArr5 = Array(" ", "DCS Install", "DCS CTS IMAC", "DCS Data Mig")
+		listArr6 = Array(" ", "DCS CTS IMAC")
+		listArr7 = Array(" ", "Vacation", "Des Holiday", "Opt Holiday", "Illness", "Personal Bus", "Paid Time !Wkd", "Unpaid Time !Wkd", "Military", "Accident", "Jury Duty", "Meetings", "Redeployment", "Travel") 
+
+		For i = 0 to (taskList.Options.Length - 1)
+            If (taskList.Options(i).Selected) Then
+                strTaskList = strTaskList & taskList.Options(i).Value
+            End If
+		Next
+	
+		Select Case(strTaskList)
+			Case 1
+				For Each objOption in subTask.Options
+					objOption.RemoveNode
+				Next
+				Exit Sub
+			Case 2
+				listArray = listArr2
+			Case 3
+				listArray = listArr2
+			Case 4
+				listArray = listArr4
+			Case 5
+				listArray = listArr5
+			Case 6
+				listArray = listArr6
+			Case 7
+				listArray = listArr7
+		End Select
+	
+		For Each objOption in subTask.Options
+			objOption.RemoveNode
+		Next
+		
+		y = 0
+		For Each x in listArray
+			Set objTOption = Document.CreateElement("OPTION")
+			objTOption.Text = x
+			objTOption.Value = y
+			subTask.Add(objTOption)
+			y = y + 1
+		Next
+		listArray ="" 
+	End Sub
+'<!--#############################[ action after 2nd dropdown in CLAIM tracker selected ]#############################-->
+	Sub taskSel
+		strTaskSel = subTask.Value
+		strTaskLi = taskList.Value
+		strWholeTask = strTaskLi & "-" & strTaskSel
+	End Sub
+'<!--#############################[ action for Submit button in CLAIM tracker ]#############################-->
+	Sub TaskTrack
+		strTaskLi = taskList.Value
+		strTaskSel = subTask.Value
+		strWholeTask = strTaskLi & "-" & strTaskSel
+		strTT = TaskTime.Value
+		strDes = TicketDes.Value
+		If strTT = "" Then
+			MsgBox "You forgot to enter a the time for the task.", vbExlamation+vbOkOnly, "Try again!"
+			Exit Sub
+		End If
+		
+		If strTaskLi = "1" Then
+			MsgBox "You forgot to enter the primary task field.", vbExlamation+vbOkOnly, "Try again!"
+			Exit Sub
+		End If
+		
+		If strTaskSel = "0" Then
+			MsgBox "You forgot to enter the secondary task field.", vbExlamation+vbOkOnly, "Try again!"
+			Exit Sub
+		End If
+		
+		dtmToday = WeekDayName(WeekDay(Now))			
+			
+		Select Case(dtmToday)
+			Case "Monday"
+				z = 8
+				Call CheckMonday
+			Case "Tuesday"
+				z = 9
+				Call TriggerXlDel
+			Case "Wednesday"
+				z = 10
+				Call TriggerXlDel
+			Case "Thursday"
+				z = 11
+				Call TriggerXlDel
+			Case "Friday"
+				z = 12
+				Call TriggerXlDel
+			Case "Saturday"
+				z = 6
+				Call CheckMonday
+			Case "Sunday"
+				z = 7
+				Call CheckMonday
+			Case Else
+				MsgBox "Something went wrong. Try again.", vbExclamation+vbOkOnly, "OOOPS!"
+				Exit Sub
+		End Select
+		
+		Select Case(strWholeTask)
+			Case "2-1"
+				a = 3
+			Case "2-2"
+				a = 4
+			Case "2-3"
+				a = 5
+			Case "2-4"
+				a = 6
+			Case "2-5"
+				a = 7
+			Case "2-6"
+				a = 8
+			Case "2-7"
+				a = 9
+			Case "3-1"
+				a = 10
+			Case "3-2"
+				a = 11
+			Case "3-3"
+				a = 12
+			Case "3-4"
+				a = 13
+			Case "3-5"
+				a = 14
+			Case "3-6"
+				a = 15
+			Case "3-7"
+				a = 16
+			Case "4-1"
+				a = 17
+			Case "4-2"
+				a = 18
+			Case "4-3"
+				a = 19
+			Case "4-4"
+				a = 20
+			Case "4-5"
+				a = 21
+			Case "5-1"
+				a = 22
+			Case "5-2"
+				a = 23
+			Case "5-3"
+				a = 24
+			Case "6-1"
+				a = 25
+			Case "7-1"
+				a = 26
+			Case "7-2"
+				a = 27
+			Case "7-3"
+				a = 28
+			Case "7-4"
+				a = 29
+			Case "7-5"
+				a = 30
+			Case "7-6"
+				a = 31
+			Case "7-7"
+				a = 32
+			Case "7-8"
+				a = 33
+			Case "7-9"
+				a = 34
+			Case "7-10"
+				a = 35
+			Case "7-11"
+				a = 36
+			Case "7-12"
+				a = 37
+			Case "7-13"
+				a = 38
+			Case Else
+				MsgBox "Something isn't right or you left a field blank." , vbExclamation+vbOkOnly, "Try again"
+				Exit Sub
+		End Select
+		
+		strXlPath = "C:\Phrasekeys\CLAIM Tracker.xlsx"
+		Set objExcel = CreateObject("Excel.Application")
+		Set objWkBk = objExcel.Workbooks.Open(strXlPath)
+		objExcel.Visible = False
+		Set objSheet = objExcel.ActiveWorkbook.Worksheets(1)
+		irow = a
+		icol = z
+		cellData = objSheet.Cells(irow, icol).Value
+			If cellData = "" Then
+				cellData = "0"
+			End If		
+		cellData = cellData + strTT
+		objSheet.Cells(irow, icol).Value = cellData
+		Set objSheet = objExcel.ActiveWorkbook.Worksheets(3)
+		strCountRow = 1
+		Do While objSheet.Cells(strCountRow, 1) <> ""
+			strCountRow = strCountRow + 1
+		Loop
+		
+		Select Case(strTaskLi)
+			Case 2
+				strTaskLi = "Campus Cust"
+			Case 3
+				strTaskLi = "Remote Cust"
+			Case 4
+				strTaskLi = "Travel"
+			Case 5
+				strTaskLi = "Lease Roll"
+			Case 6
+				strTaskLi = "SMS"
+			Case 7
+				strTaskLi = "OOO Time"
+		End Select
+			
+		objSheet.Cells(strCountRow, 1).Value = strDes
+		objSheet.Cells(strCountRow, 3).Value = strTaskLi
+		objSheet.Cells(strCountRow, 5).Value = strTT
+		objSheet.Cells(strCountRow, 6).Value = dtmToday
+		If strTaskLi = "Travel" Then
+			objSheet.Cells(strCountRow, 1).Interior.Color = RGB(255, 255, 0)
+			objSheet.Cells(strCountRow, 2).Interior.Color = RGB(255, 255, 0)
+			objSheet.Cells(strCountRow, 3).Interior.Color = RGB(255, 255, 0)
+			objSheet.Cells(strCountRow, 4).Interior.Color = RGB(255, 255, 0)
+			objSheet.Cells(strCountRow, 5).Interior.Color = RGB(255, 255, 0)
+			objSheet.Cells(strCountRow, 6).Interior.Color = RGB(255, 255, 0)
+		End If
+		objWkBk.Save
+		objWkBk.Close
+		
+		strTaskLi = ""
+		strTaskSel = ""
+		strWholeTask = ""
+		Collect("Time submitted in CLAIM tracker")
+		
+	End Sub
+	
+	Sub TriggerXlDel
+		Set objFso = CreateObject("Scripting.FileSystemObject")
+		Set objFile = objFso.OpenTextFile("C:\Phrasekeys\monday.txt", 2)
+		objFile.WriteLine "1"
+		objFile.Close
+	End Sub
+	
+	Sub CheckMonday
+		Set objFso = CreateObject("Scripting.FileSystemObject")
+		Set objFile = objFso.OpenTextFile("C:\Phrasekeys\monday.txt", 1)
+		strStatus = objFile.ReadLine
+		If strStatus = "1" Then
+			delAns = MsgBox("Would you like to delete last weeks time entries before continuing?", vbExclamation+vbYesNo, "Delete previous week's data?")
+				If delAns = vbYes Then
+				Set objFile = objFso.OpenTextFile("C:\Phrasekeys\monday.txt", 2)
+					objFile.WriteLine "0"
+					Call ClearExcel
+				Else
+				Set objFile = objFso.OpenTextFile("C:\Phrasekeys\monday.txt", 2)
+					objFile.WriteLine "0"
+				End If
+		End If
+		objFile.Close
+	End Sub
+	
+	Sub ClearExcel
+		strXlPath = "C:\Phrasekeys\CLAIM Tracker.xlsx"
+		Set objExcel = CreateObject("Excel.Application")
+		Set objWkBk = objExcel.Workbooks.Open(strXlPath)
+		objExcel.Visible = False
+		Set objSheet = objExcel.ActiveWorkbook.Worksheets(1)
+		objSheet.Range("F3:L38").ClearContents
+		Set objSheet = objExcel.ActiveWorkbook.Worksheets(3)
+		objSheet.Cells.ClearContents
+		objWkBk.Save
+		objWkBk.Close
+	End Sub
+'<!--#############################[ action for View button in CLAIM tracker ]#############################-->
+	Sub ViewTime
+		strXlPath = "C:\Phrasekeys\CLAIM Tracker.xlsx"
+		Set objExcel = CreateObject("Excel.Application")
+		Set objWkBk = objExcel.Workbooks.Open(strXlPath)
+		objExcel.Visible = True
+		Set objSheet = objExcel.ActiveWorkbook.Worksheets(1)
+		Collect("Time viewed in CLAIM tracker")
+		xlTitle = "CLAIM Tracker"
+		Set frontObj = CreateObject("WScript.Shell")
+		frontObj.AppActivate(xlTitle)
+	End Sub
+'<!--#############################[ sub to change IE start page on local machine ]#############################-->
+	Sub IEsp
+
+	End Sub
 '<!--#############################[ Quit ]#############################-->
     Sub Quit_onclick
       Window.Close
