@@ -1,0 +1,170 @@
+<HTML>
+<!-- written by Joey Gauthier/IBM/1-20-2014
+    Admin Rights Tool (ART) 
+  
+//-->
+  <HEAD>
+  <TITLE>Admin Rights Tool (ART)</TITLE>
+  <meta http-equiv="x-ua-compatible" content="ie-9">
+      <HTA:APPLICATION
+      Application ID = "ART"
+      APPLICATIONNAME = "ART"
+      BORDER = "Thick"
+      BORDERSTYLE = "Complex"
+      CAPTION = "Yes"
+      CONTEXTMENU = "yes"
+      INNERBORDER = "yes"
+      MAXIMIZEBUTTON = "yes"
+      MINIMIZEBUTTON = "yes"
+      NAVIGABLE = "yes"
+      SCROLL = "No"
+      SCROLLFLAT = "Yes"
+      SELECTION = "No"
+      SHOWINTASKBAR = "Yes"
+      SINGLEINSTANCE = "Yes"
+      SYSMENU = "yes"
+      VERSION = "1.1"
+      WINDOWSTATE = "Normal"
+      />
+	<style type="text/css">
+	
+	.bbutt {
+	background-color:#000000;
+	color:#ffffff;
+	}
+
+	</style> 
+  </HEAD>
+  <SCRIPT LANGUAGE="VBScript">
+  Dim strComp, strUser
+'<!--#################[ Set Dialog Size and Position ]######################-->
+	Sub StartUp()
+         window.resizeTo 300,316		  		  
+    End Sub
+    StartUp
+'<!--#################[ Window OnLoad ]######################-->	  
+	Sub Window_Onload
+		window.offscreenBuffering = True
+		iTimerID = window.setInterval("VbsClock", 1200)
+	End Sub
+'<!--#################[ Sub for Clock ]######################-->
+	Sub VbsClock
+		myClock.innerText = now()
+	End Sub
+'<!--#######################[ Sub to add user or group to local admin group ]#######################-->
+	Sub LocAdm
+		strComputer = CompName.Value
+		If strComputer = "" Then
+			MsgBox "You have to enter a computer name or IP address for this to work!", vbExclamation+vbOkOnly, "Try Again!"
+			Exit Sub
+		End If
+	
+		On Error Resume Next
+		Set objGroup = GetObject("WinNT://" & strComputer & "/Administrators, group")
+		strUser = InputBox("Enter the ID of the user or the name of the group your wish to add to the admin group on " & strComputer, "Who to add?")
+		If strUser = "" Then
+			Exit Sub
+		End If
+		
+		strDom = InputBox("Enter the full domain path that user's ID resides in...", "Domain Name")
+		Set objUser = GetObject("WinNT://" & strDom & "/" & strUser)
+		objGroup.Add(objUser.ADsPath)
+		objGroup.SetInfo
+	
+		If Err.Number <> 0 Then
+			If Err.Number = "-2147023518" Then
+				MsgBox "The user is already a member of that group", ,"No Need!"
+				Exit Sub
+			Else
+				MsgBox "The user/group was not added to the Admin group due to an error# " & Err.Number & " . Check your connection to the target machine. Also note that this will return this message if the user is already a member of that group.", vbOkOnly+vbExclamation, "ERROR!"
+				Exit Sub
+			End If
+		Else
+			strAnswer = MsgBox(strUser & " was added to the local administrator group on " & strComputer & ". Would you like to set it so that the rights are automatically removed in 8 hours?",vbInformation+vbYesNo ,"Success!")
+			If strAnswer = vbYes Then
+				Call SchRemoveAdmin
+			Else
+				Exit Sub
+			End If
+		End If
+	End Sub
+'<!--#######################[ Sub to remove a user from the admin group ]#######################-->
+	Sub RemoveAdmin
+		strComputer = CompName.Value
+		If strComputer = "" Then
+			MsgBox "You have to enter a computer name or IP address for this to work!", vbExclamation+vbOkOnly, "Try Again!"
+			Exit Sub
+		End If
+	
+		'On Error Resume Next
+		Set objGroup = GetObject("WinNT://" & strComputer & "/Administrators, group")
+		strUser = InputBox("Enter the ATTUID of the user or the name of the group your wish to remove from the admin group on " & strComputer, "Who to remove?")
+		If strUser = "" Then
+			Exit Sub
+		End If
+		strDom = InputBox("Enter the full domain path that user's ID resides in...", "Domain Name")
+		Set objUser = GetObject("WinNT://" & strDom & "/" & strUser)
+	
+		On Error Resume Next
+		objGroup.Remove(objUser.AdsPath)
+		objGroup.SetInfo
+		If Err.Number <> 0 Then
+			MsgBox "Something went wrong. Make sure the machine is remotely accessible and check that the user is a member of the admin group first.", vbExclamation+vbOkOnly, "ERROR!!!"
+			Exit Sub
+		Else
+			MsgBox "Success! You removed the user from the admin group on that machine!", vbInformation+vbOkOnly, "Sucess!!"
+		End If	
+	End Sub
+'<!--#######################[ Sub to check the users of the admin group ]#######################-->
+	Sub ADGroup
+		strComp = CompName.Value
+		If strComp = "" Then
+			MsgBox "You have to enter a computer name or IP address for this to work!", vbExclamation+vbOkOnly, "Try Again!"
+			Exit Sub
+		End If
+		strOutput = ""
+		Set objAdminGroup = GetObject("WinNT://" & strComp & "/Administrators,group")
+		If objAdminGroup.PropertyCount > 0 Then
+			For Each objMember In objAdminGroup.Members
+				strOutput = strOutput & objMember.name & vbCrLf
+			Next
+		Else
+			strOutput = strOutput & vbCrLf &  "Either the machine couldn't be reached or there are no members of the local admin group!"
+		End If
+		MsgBox strOutput, vbInformation+vbOkOnly, "Members of admin group on " & strcomp
+	End Sub
+'<!--#######################[ Sub to schedule the removal of the ATTUID from the admin group ]#######################-->	
+	Sub SchRemoveAdmin
+		strComputer = CompName.Value
+		strNow = Hour(now())
+		str8H = strNow + 8	
+		Set objWMIService = GetObject("winmgmts:" & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+		Set objNewJob = objWMIService.Get("Win32_ScheduledJob")
+	
+		On Error Resume Next
+		strTask = "NET LOCALGROUP administrators " & strUser & " /delete"
+		Set objShell = CreateObject("WScript.Shell")
+		strStart = str8H & ":15"
+		objShell.Run "cmd.exe /k schtasks.exe /Create /s " & strComputer & " /RU SYSTEM /SC ONCE /TN RemoveAdmin /TR " & chr(34) & strTask & chr(34) & " /ST " & strStart & " /F"
+		MsgBox "Task scheduling attempted. Check the command prompt to make sure it was successful.", vbInformation+vbOkOnly, "Check terminal"
+	End Sub
+'<!--#############################[ Quit ]#############################-->
+    Sub Quit_onclick
+		Window.Close
+    End Sub
+'<!--#######################[ End of vbscript ]#######################-->
+</SCRIPT>
+<BODY STYLE="background:'black'; margin:0; padding:0; font:9pt arial; color:#00ccff;">
+ <center>
+	<FONT SIZE=2><B><I>Computer name or IP for checking/modifying admin group:</I></B></FONT><BR>
+	<input name="CompName" value="" size="18" type="text"><BR>
+	<HR><BR>
+	<INPUT TYPE=BUTTON onClick="LocAdm" NAME="LocAdm" VALUE="Add to Loc Adm Group"><br><br>
+	<INPUT TYPE=BUTTON onClick="ADGroup" NAME="ADGroup" VALUE="Check Loc Adm Group"><br><br>
+	<INPUT TYPE=BUTTON onClick="RemoveAdmin" NAME="RemoveAdmin" VALUE="Remove from Adm Group"><br><br>
+	<HR Size -1>
+	<PRE STYLE="border: 2px thick white; padding: 0; margin: 0;font-family:Tahoma, Arial;" ID=myClock></PRE><BR>
+	<INPUT TYPE=BUTTON CLASS = "bbutt" NAME="Quit" VALUE="Quit">
+ </center>
+</BODY>
+</html>
