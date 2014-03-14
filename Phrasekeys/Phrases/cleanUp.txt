@@ -1,0 +1,1 @@
+Clients machine was running slowly due to a large number of temp files and cached profiles. I deleted all of the junk files from the machine and rebooted to speed up performance. I also checked to make sure the NIC speed was set correctly since that can have a dramatic effect on performance as well.Resolved.
