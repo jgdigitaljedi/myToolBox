@@ -1,0 +1,1823 @@
+  <HTML>
+  <HEAD>
+  <TITLE>ToolBox 2.0</TITLE>
+  <meta http-equiv="x-ua-compatible" content="ie-9">
+      <HTA:APPLICATION
+      Application ID = "ToolBox 2.0"
+      APPLICATIONNAME = "ToolBox 2.0"
+      BORDER = "Thick"
+      BORDERSTYLE = "Complex"
+      CAPTION = "Yes"
+      CONTEXTMENU = "yes"
+      ICON = "C:\Phrasekeys\toolbox.ico"
+      INNERBORDER = "yes"
+      MAXIMIZEBUTTON = "yes"
+      MINIMIZEBUTTON = "yes"
+      NAVIGABLE = "yes"
+      SCROLL = "No"
+      SCROLLFLAT = "Yes"
+      SELECTION = "No"
+      SHOWINTASKBAR = "Yes"
+      SINGLEINSTANCE = "Yes"
+      SYSMENU = "yes"
+      VERSION = "2.0"
+      WINDOWSTATE = "Normal"
+      />
+	<style type="text/css">
+	
+	.bbutt {
+	background-color:#000000;
+	color:#ffffff;
+	}
+	
+	.blubutton {
+	Font-size:60%;
+	background-color:#00ccff;
+	color:#000000; 
+	width:110px;
+	}
+	
+	#textarea {
+	Height:200;
+    Width:100%;
+    font-Size:12;
+    color:#000000;
+    background-color:#ffffe7;
+    font-weight:normal;
+    font-family:MS Sans Serif;
+	}
+	</style>
+	</HEAD>
+  <SCRIPT LANGUAGE="VBScript">
+  Dim intKillTime, intLeft, intTop
+  Dim fso, oFile, objIni
+  Dim strPhrase, strDir, strReadme, strAns, strResult, strTarget, strDestinationLocation, strSourceFolder, strRemFile
+  Dim strSourcePath, StrMessage, strDestinationPath, MinutesOld, strPrint, strFromPath, strToPath, strComp, strCompName
+  Dim dtmBootup, DateBounceMins, DateKillMins
+  Dim objShell, objFso, objAns, objFile, objPing, objSourceFolder, objLogFile, objSource, objFileDest, objDestFolder
+  Dim objSubfolder, objDestination
+  Dim colOperatingSystems 
+  'Dim Loc, Rem, Mult
+  Set fso = CreateObject("Scripting.FileSystemObject")
+  Set objShell = CreateObject("WScript.Shell") 
+  strDir = ("C:\Phrasekeys")
+'<!--#################[ Set Dialog Size and Position ]######################-->
+      Sub StartUp()
+          window.resizeTo 920,728		  		  
+	  End Sub
+      StartUp
+'<!--#################[ Window OnLoad ]######################-->	  
+	  Sub Window_Onload
+		window.offscreenBuffering = True
+		
+		Const ForReading = 1
+		Set objIni = fso.OpenTextFile("C:\Phrasekeys\HTA.ini", ForReading)
+		strContents = objIni.ReadAll
+		objIni.Close
+		
+		arrContents = Split(strContents, ",")
+		window.moveTo arrContents(0), arrContents(1)
+		
+		Call PopulateDropDown
+		Call PopulateEmails
+		
+		iTimerID = window.setInterval("VbsClock", 1200)
+	  End Sub
+'<!--#################[ Sub for Clock ]######################-->
+	Sub VbsClock
+	myClock.innerText = now()
+
+	End Sub
+'<!--#####################[ Notes Text Area ]#####################-->
+	Sub Submitarea
+		Set oFile = fso.OpenTextFile( "C:\Phrasekeys\TextArea.txt",8,true)
+		sTxtarea = document.all("Txtarea").Value
+        oFIle.Write sTxtarea & vbCRLF
+        MsgBox "Your text has been added to C:\Phrasekeys\TextArea.txt", 64,"Textarea Input"
+		Collect("Submit area saved")
+		oFile.Close
+    End Sub 'Submitarea
+    Sub OpenTxtArea
+        ShellRun = objShell.Run ("%comspec% /c Start Notepad C:\Phrasekeys\TextArea.txt", 0, 1)
+		Collect("Submit area opened")
+    End Sub 'OpenTxtArea
+	Sub ClearNote
+		Const ForWriting = 2
+		Set objLog = fso.OpenTextFile("C:\Phrasekeys\TextArea.txt", ForWriting)
+		objLog.Write ""
+		objLog.Close
+		Collect("Submit area cleared")
+	End Sub
+'<!--#####################[ CompNames Text Area ]#####################-->
+	Sub SaveCompNames
+		Const ForWriting = 2
+		Set oFile = fso.OpenTextFile( "C:\Phrasekeys\CompNames.txt",ForWriting,true)
+		sTxtarea = document.all("Txtarea").Value
+        oFIle.Write sTxtarea & vbCRLF
+        MsgBox "Your text has been added to C:\Phrasekeys\CompNames.txt", 64,"Textarea Input"
+		oFile.Close
+		Collect("CompName area saved")
+    End Sub 'SaveCompNames
+    Sub OpenCompNames
+        ShellRun = objShell.Run ("%comspec% /c Start Notepad C:\Phrasekeys\CompNames.txt", 0, 1)
+		Collect("CompName area opened")
+    End Sub 'OpenCompNames
+	Sub ClearCompNames
+		Const ForWriting = 2
+		Set objLog = fso.OpenTextFile("C:\Phrasekeys\CompNames.txt", ForWriting)
+		objLog.Write ""
+		objLog.Close
+		Collect("CompName area cleared")
+	End Sub
+'<!--#####################[ Sub for buttons window popup ]#####################-->	
+	Sub Buttons(strSelection)
+	var1 = CompName.Value
+	strLComps = CompFile.Value
+	Set objExplorer = CreateObject("InternetExplorer.Application")
+	
+	If strLComps <> "" Then	
+		'objExplorer.Navigate "file:///c:\Phrasekeys\buttons.htm"
+		'objExplorer.ToolBar = 0
+		'objExplorer.StatusBar = 0
+		'objExplorer.Width = 210
+		'objExplorer.Height = 170
+		'objExplorer.Visible = 1
+		
+		'Do While (objExplorer.Document.All.ButtonClicked.Value = "")
+		'	objShell.AppActivate "C:\Phrasekeys\buttons.htm"
+		'	Sleepy(2)
+		'Loop
+	
+		'strSelection = objExplorer.Document.All.ButtonClicked.Value
+		'objExplorer.Quit
+		strSelection = InputBox("Type 'Loc' for a local cleanup and 'Rem' to cleanup a list of machines.", "Run against what exactly?")
+		
+	Else If var1 = "" Then
+			strSelection = "Loc"
+		Else
+			strSelection = "Rem"
+		End If
+	End If
+	End Sub
+'<!--#######################[ Power Options ]#######################-->
+      Sub CheckRadio
+		Dim intReally, intRemote
+		strComp = CompName.Value
+          If rbtn(0).Checked Then
+				intRemote = MsgBox("Click 'Yes' to reboot this machine or 'No' to reboot the machine name or IP address in the field on the right."_
+					, vbYesNoCancel, "Reboot local or remote machine?")
+					If intRemote = vbYes Then
+						intReally = MsgBox("Save all work first. Are you sure you want to reboot this machine?", vbYesNo+vbInformation , "Reboot System?")
+							If intReally = vbYes then
+								Call Bounce
+								Collect("Local machine rebooted")
+							Else
+								Exit Sub
+							End If
+					Else
+						If intRemote = vbCancel Then
+							Exit Sub
+						Else
+						Collect("Remote machine rebooted")
+						strFromPath = "C:\Phrasekeys\Subs\reboot.bat"
+						strRemFile = "reboot.bat"
+							If strComp = "" Then
+								MsgBox "Then 'computer name or IP address' field on the right side of the application is blank."
+								Exit Sub
+							Else
+								Call CopyIt
+								Call TwoMinutes
+							End If
+						End If
+					End If
+          End If
+		  
+		  If rbtn(1).Checked Then
+			intRemote = MsgBox("Click 'Yes' to reboot this machine or 'No' to reboot the machine name or IP address in the field on the right."_
+					, vbYesNoCancel, "Reboot local or remote machine?")
+					If intRemote = vbYes Then
+						Collect("Local machine scheduled reboot")
+						DateBounceTime = InputBox("At what time would you like this machine to reboot? Enter imiltary time in 'HH:MM' format including the colon." _
+						  , vbInformation, "Scheduled Reboot")
+							If Len(DateBounceTime) <> 5 Then
+								MsgBox "Time not entered correctly. Cancelling scheduled reboot"
+								Exit Sub
+							Else
+								DateBounceMins = DateDiff("n", Time, TimeValue(DateBounceTime))
+								MsgBox DateBounceMins
+								Call SchReboot
+							End If
+					Else
+						If intRemote = vbCancel Then
+							Exit Sub
+						Else
+							strFromPath = "C:\Phrasekeys\Subs\reboot.bat"
+							strRemFile = "reboot.bat"
+								If strComp = "" Then
+								MsgBox "Then 'computer name or IP address' field on the right side of the application is blank."
+								Exit Sub
+							Else
+								Call CopyIt
+								Call Scheduled
+								Collect("Remote machine scheduled reboot")
+							End If
+						End If
+					End If
+          End If
+      
+          If rbtn(2).Checked Then
+			intRemote = MsgBox("Click 'Yes' to shutdown this machine or 'No' to shutdown the machine name or IP address in the field on the right."_
+					, vbYesNoCancel, "Shutdown local or remote machine?")
+					If intRemote = vbYes Then
+						intReally = MsgBox("Are you sure you want to shut the machine down?", vbYesNo,"Power down the machine?")
+							If intReally = vbYes then
+								Call Killit
+								Collect("Local machine shutdown")
+							Else
+								Exit Sub
+							End If
+					Else
+						If intRemote = vbCancel Then
+							Exit Sub
+						Else
+						Collect("Remote machine shutdown")
+						strFromPath = "C:\Phrasekeys\Subs\shutdown.bat"
+						strRemFile = "shutdown.bat"
+							If strComp = "" Then
+								MsgBox "Then 'computer name or IP address' field on the right side of the application is blank."
+								Exit Sub
+							Else
+								Call CopyIt
+								Call TwoMinutes
+							End If
+						End If
+					End If
+          End If
+      
+          If rbtn(3).Checked Then
+		  intRemote = MsgBox("Click 'Yes' to shutdown this machine or 'No' to shutdown the machine name or IP address in the field on the right."_
+					, vbYesNoCancel, "Shutdown local or remote machine?")
+					If intRemote = vbYes Then
+						DateKillTime = InputBox("How many minutes from now would you like the machine to shutdown?", "Scheduled Shutdown")
+							If Len(DateKillTime) <> 5 Then
+								MsgBox "Time not entered correctly. Cancelling scheduled shutdown"
+								Exit Sub
+							Else
+								DateKillMins = DateDiff("n", Time, TimeValue(DateKillTime))
+								Call SlowDeath
+								Collect("Local machine scheduled shutdown")
+							End If
+					Else
+						If intRemote = vbCancel Then
+							Exit Sub
+						Else
+						strFromPath = "C:\Phrasekeys\Subs\shutdown.bat"
+						strRemFile = "shutdown.bat"
+							If strComp = "" Then
+								MsgBox "Then 'computer name or IP address' field on the right side of the application is blank."
+								Exit Sub
+							Else
+								Call CopyIt
+								Call Scheduled
+								Collect("Remote machine scheduled shutdown")
+							End If
+						End If
+					End If
+		  End If
+      End Sub 'CheckRadio
+'<!--#######################[ Sub to set a scheduled task for 2 minutes from now on remote machine ]#######################-->
+	Sub TwoMinutes
+		Dim var1, var2, strCmd
+		var1 = CompName.Value
+		var2 = "C:\Temp\" & strRemFile 
+		strCmd = "cmd.exe /c C:\Phrasekeys\Subs\TwoMinutes.bat"
+		objShell.Run strCmd & " " & var1 & " " & var2
+	End Sub
+'<!--#######################[ Sub to set vbscript to run 2 minutes on remote machine ]#######################-->
+	Sub VS2Minutes
+		Dim var1, var2, strCmd
+		var1 = CompName.Value
+		var2 = "C:\Temp\" & strRemFile 
+		strCmd = "cmd.exe /c C:\Phrasekeys\Subs\VB2Mins.bat"
+		objShell.Run strCmd & " " & var1 & " " & var2
+	End Sub
+'<!--#######################[ Sub to set a scheduled task for a specified time on remote machine ]#######################-->
+	Sub Scheduled
+		Dim var1, var2, strCmd
+		var1 = CompName.Value
+			If var1 = "" Then
+				Set wshNetwork = CreateObject("WScript.Network")
+				var1 = wshNetwork.ComputerName
+			End If
+		var2 = InputBox _
+		 ("What time would you like this to run? Please use military time and enter with a colon separating the hours and minutes 'HH:MM'")
+		If Len(var2) <> 5 Then
+			strOops = MsgBox ("You did not enter the time in the proper format! It needs to be 'HH:MM' with the ':' included. Press 'OK' to try again or 'Cancel' to quit."_
+			   , vbOkCancel+vbInformation, "Oops!")
+					If strOops = vbOk Then
+						Call Scheduled
+					Else
+						Exit Sub
+					End If
+		Else
+			var3 = "C:\Temp\" & strRemFile 
+			strCmd = "cmd.exe /c C:\Phrasekeys\Subs\Schedule.bat"
+			objShell.Run strCmd & " " & var1 & " " & var2 & " " & var3
+		End If
+	End Sub	
+'<!--#######################[ Sub to schedule user specified task ]#######################-->	
+	Sub UserSch
+	var1 = CompName.Value
+	strLComps = CompFile.Value
+
+	Call Buttons(strSelection)
+	
+	Select Case strSelection
+		Case "Loc"
+			Set wshNetwork = CreateObject("WScript.Network")
+			var1 = wshNetwork.ComputerName
+			var3 = InputBox("Type the full path, command, and/or switches of the task you wish to schedule on this machine.", "Time to get technical!")
+			var2 = InputBox _
+		 ("What time would you like this to run? Please use military time and enter with a colon seperating the hours and minutes 'HH:MM'")
+			If Len(var2) <> 5 Then
+				strOops = MsgBox ("You did not enter the time in the proper format! It needs to be 'HH:MM' with the ':' included. Press 'OK' to try again or 'Cancel' to quit."_
+				, vbOkCancel+vbInformation, "Oops!")
+					If strOops = vbOk Then
+						Call UserSch
+					Else
+						Exit Sub
+					End If
+			Else
+				strCmd = "cmd.exe /c C:\Phrasekeys\Subs\Schedule.bat"
+				objShell.Run strCmd & " " & var1 & " " & var2 & " " & Chr(34) & var3 & Chr(34)
+			End If		
+			Collect("User specified task scheduled on local machine")
+		Case "Rem"
+			var1 = CompName.Value
+			var3 = InputBox("Type the full path, command, and/or switches of the task you wish to schedule on " & var1 & ".", "Time to get technical!")
+			var2 = InputBox _
+		 ("What time would you like this to run? Please use military time and enter with a colon seperating the hours and minutes 'HH:MM'")
+			If Len(var2) <> 5 Then
+				strOops = MsgBox ("You did not enter the time in the proper format! It needs to be 'HH:MM' with the ':' included. Press 'OK' to try again or 'Cancel' to quit."_
+				, vbOkCancel+vbInformation, "Oops!")
+					If strOops = vbOk Then
+						Call UserSch
+					Else
+						Exit Sub
+					End If
+			Else
+				strCmd = "cmd.exe /c C:\Phrasekeys\Subs\Schedule.bat"
+				objShell.Run strCmd & " " & var1 & " " & var2 & " " & Chr(34) & var3 & Chr(34)
+			End If
+			Collect("User specified task scheduled on remote machine")
+		Case "Mult"
+			var1 = CompFile.Value
+			var3 = InputBox("Type the full path, command, and/or switches of the task you wish to schedule these machines.", "Time to get technical!")
+			var2 = InputBox _
+		 ("What time would you like this to run? Please use military time and enter with a colon seperating the hours and minutes 'HH:MM'")
+			If Len(var2) <> 5 Then
+				strOops = MsgBox ("You did not enter the time in the proper format! It needs to be 'HH:MM' with the ':' included. Press 'OK' to try again or 'Cancel' to quit."_
+				, vbOkCancel+vbInformation, "Oops!")
+					If strOops = vbOk Then
+						Call UserSch
+					Else
+						Exit Sub
+					End If
+			Else
+				strCmdi = "cmd.exe /c C:\Phrasekeys\Subs\MultiSch.bat"  & " " & var1 & " " & var2 & " " & Chr(34) & var3 & Chr(34)
+				objShell.Run strCmdi
+			End If
+			Collect("User specified task scheduled on a list of remote machines")
+		Case "Cancelled"
+			Exit Sub
+	End Select
+	End Sub
+'<!--#######################[ Multi-Select Listbox Menu ]#######################-->
+	Sub RunMultiList
+         For i = 0 to (MultiListBox.Options.Length - 1)
+            If (MultiListBox.Options(i).Selected) Then
+                strChoices = strChoices & MultiListBox.Options(i).Value
+            End If
+		 Next
+		Select Case (strChoices)
+			Case 1
+				RemPing
+				Collect("Remote machine pinged")
+			Case 2
+				Call CleanWeb
+				Collect("Local IE files cleaned")
+			Case 3
+				Call ListMappedDrives
+				Collect("Mapped drives and printers listed")
+			Case 4
+				Call GetInfo
+				Collect("Machine info displayed")
+			Case 5
+				LoggedIn
+				Collect("Checked to see who is logged in")
+			Case 6
+				UnCCM
+				Collect("SCCM uninstalled")
+			Case 7
+				CopsWMI
+				Collect("WMI checked and repaired")
+			Case 8
+				FileSearch
+				Collect("File search completed")
+			Case 9
+				BiosType
+				Collect("BIOS type info displayed")
+			Case 10
+				FixMsi
+				Collect("MsiExec repair done")
+			Case 11
+				CleanTemp
+				Collect("Temp directories emptied")
+			Case 12
+				Defrag
+				Collect("Defrag run")
+			Case 13
+				DisAutorun
+				Collect("Autorun disabled")
+			Case 14
+				RevIP
+				Collect("Reverse IP lookup done")
+			Case 15
+				CopyThis
+				Collect("Specified File copyed to remote mahcine")
+			Case 16
+				IpConfig
+				Collect("Local ipconfig run")
+			Case 17
+				UserSch
+			Case 18
+				SerNum
+				Collect("Remote serial number search done")
+			Case 19
+				LocAdm
+				Collect("User/group added to local admin group")
+			Case 20
+				CmdHere
+				Collect("'Open Cmd Prompt Here' Added to right-click menu")
+			Case 22
+				FindPST
+				Collect("PST file search completed")
+			Case 23
+				ADGroup
+				Collect("Checked administrator group on machine")
+		End Select
+      End Sub
+'<!--#######################[ Sub to check the users of the admin group ]#######################-->
+	Sub ADGroup
+		strComp = CompName.Value
+		If strComp = "" Then
+			strComp = "."
+		End If
+		strOutput = ""
+		Set objAdminGroup = GetObject("WinNT://" & strComp & "/Administrators,group")
+		If objAdminGroup.PropertyCount > 0 Then
+			For Each objMember In objAdminGroup.Members
+				strOutput = strOutput & objMember.name & vbCrLf
+			Next
+			
+		Else
+			strOutput = strOutput & vbCrLf &  "Either the machine couldn't be reached or there are no members of the local admin group!"
+		End If
+		strOutput = strOutput & vbCrLf & vbCrLf & "Users in 'Remote Users' group are:" & vbCrLf & vbCrLf
+		Set objRUGroup = GetObject("WinNT://" & strComp & "/Remote Desktop Users,group")
+		If objRUGroup.PropertyCount > 0 Then
+			For Each objMember In objRUGroup.Members
+				strOutput = strOutput & objMember.name & vbCrLf
+			Next
+			
+		Else
+			strOutput = strOutput & vbCrLf &  " Either the machine couldn't be reached or there are no members of the local admin group!"
+		End If
+		MsgBox strOutput, vbInformation+vbOkOnly, "Members of admin and RU groups on " & strcomp
+	End Sub
+'<!--#######################[ Sub to find .pst files ]#######################-->
+	Sub FindPST
+	strComputer = CompName.Value
+		If strComputer = "" Then
+			strComputer = "."
+		End If
+	
+	strWarn = MsgBox("This query can take a couple of minutes to complete and only looks for .pst files on the C: drive. Press 'OK' to continue or 'Cancel' to exit.", _
+	vbOkCancel+vbInformation, "Just to let you know...")
+		If strWarn = vbCancel Then
+			Exit Sub
+		End If
+	On Error Resume Next	
+	strPST = ".pst files found on " & strComputer & vbCr & vbCr
+	Set objWMIService = GetObject("winmgmts:\\" & strComputer & "\root\cimv2")
+
+	Set colFiles = objWMIService.ExecQuery _
+		("Select * from CIM_DataFile Where Extension = 'pst' AND Drive = 'C:'")
+
+	For Each objFile in colFiles
+		strSize = Round(objFile.FileSize / 1048576, 1) 
+		strPST = strPST & objFile.Drive & objFile.Path & objFile.Filename & vbTab & strSize & " MB" & vbCr & vbCr
+	Next
+
+	If Err.Number <> 0 Then
+		MsgBox "Failed to find .pst files. either the target was not reachable or the target's WMI is corrupt.", vbExclamation, "FAILED!"
+		Exit Sub
+	Else
+		MsgBox strPST,,"List of .pst files"
+	End If
+	End Sub
+'<!--#######################[ Sub to add "open cmd prompt here" to right-click menu ]#######################-->	
+	Sub CmdHere
+	On Error Resume Next
+	Set objShell = CreateObject("WScript.Shell") 
+	objShell.RegWrite "HKCR\Folder\Shell\MenuText\Command\", "cmd.exe /k cd " & chr(34) & "%1" & chr(34)
+	objShell.RegWrite "HKCR\Folder\Shell\MenuText\", "Open Command Prompt Here"
+	If Err.Number <> 0 Then
+		MsgBox "Failure to add option to right-click menu. You may not have registry access.", vbExclamation, "FAILED!!"		
+	Else
+		MsgBox "'Open CMD Prompt Here' was added to your right-click menu. Right-click on a folder and you will now have this option.", vbInformation ,"Success!!"
+	End If
+	End Sub
+'<!--#######################[ Sub Ping Machine ]#######################-->	
+	Sub RemPing
+	Dim objLookup, strCons
+	strComputer = CompName.Value
+	If strComputer = "" then
+		MsgBox "It's not going to do a lot of good to ping yourself!"
+		Exit Sub
+	End If
+	Set objShell = CreateObject("WScript.Shell")
+	Set objLookup = objShell.Exec("ping " & strComputer)
+	strCons = LCase(objLookup.StdOut.ReadAll)
+	MsgBox strCons
+	End Sub
+'<!--#######################[ Sub IP Config readout ]#######################-->	
+	Sub IpConfig
+	Set objShell = CreateObject("WScript.Shell")
+	Set objConfig = objShell.Exec("ipconfig /all")
+	
+	Do Until objConfig.StdOut.AtEndOfStream
+		strIPC = objConfig.StdOut.ReadLine()
+		If InStr(strIPC, "IPv4 Address") Then
+			strLine = strIPC
+			Exit Do
+		End If
+	Loop
+	MsgBox strLine
+	End Sub
+'<!--#######################[ Sub to add user or group to local admin group ]#######################-->
+	Sub LocAdm
+	strComputer = CompName.Value
+	If strComputer = "" Then
+		strComputer = "."
+	End If
+	
+	On Error Resume Next
+	Set objGroup = GetObject("WinNT://" & strComputer & "/Administrators")
+	strUser = InputBox("Enter the ID of the user or the name of the group your wish to add to the admin group on " & strComputer, "Who to add?")
+	If strUser = "" Then
+		Exit Sub
+	End If
+	strDom = InputBox( "Enter the full domain name in which the user ID is located.")
+	Set objUser = GetObject("WinNT://" & strDom & "/" & strUser)
+	objGroup.Add(objUser.ADsPath)
+	
+	If Err.Number <> 0 Then
+		MsgBox "The user/group was not added to the admin group due to an error. Check your connection to the target machine.", vbOkOnly+vbExclamation, "ERROR!"
+		Exit Sub
+	Else
+		strComputer = "this machine"
+		MsgBox strUser & " was added to the local administrator group on " & strComputer & ".", ,"Success!"
+	End If
+	End Sub
+'<!--#######################[ Sub Defrag ]#######################-->
+	Sub Defrag
+	strComp = CompName.Value
+		If strComp = "" or strComp = "." Then
+			Set objShell = CreateObject("WScript.Shell")
+			strDefrag = "defrag.exe c: -f -v"
+			objShell.Run strDefrag
+		Else
+			defAnswer = MsgBox("Click 'Yes' to start defrag ASAP, 'No' to schedule a time to start defrag, and 'Cancel' to abort." _
+			, vbYesNoCancel+vbInformation, "When to start defrag?")
+				If defAnswer = vbYes Then
+					strRemFile = "defrag.bat"
+					strFromPath = "C:\Phrasekeys\Subs\" & strRemFile
+					Call CopyIT
+					Call TwoMinutes
+				End If
+				If defAnswer = vbNo Then
+					strRemFile = "defrag.bat"
+					strFromPath = "C:\Phrasekeys\Subs\" & strRemFile
+					Call CopyIT
+					Call Scheduled
+				End If
+				If defAnswer= vbCancel Then
+					Exit Sub
+				End If
+		End If
+	End Sub
+'<!--#######################[ Sub Reverse IP Lookup ]#######################-->
+	Sub RevIP
+	MsgBox "Make sure you have an IP address and not a computer name in the 'Computer Name' field.", vbinformation, "Find Computer name from IP address"
+	strComp = CompName.Value
+	Set objShell = CreateObject("WScript.Shell")
+	Set objLookup = objShell.Exec("nslookup " & strComp)
+	
+	Do Until objLookup.StdOut.AtEndOfStream
+		strIPL = objLookup.StdOut.ReadLine()
+		If InStr(strIPL, "Name") Then
+			strLine = strIPL
+			Exit Do
+		End If
+	Loop
+	MsgBox strLine,, "The address " & strComp & " has the name:"
+	End Sub
+'<!--#######################[ Sub Disable Autorun ]#######################-->
+	Sub DisAutorun
+		Const HKEY_LOCAL_MACHINE = &H80000002
+		strComp = CompName.Value
+		If strComp = "" Then
+			strComp = "."
+		End If
+		
+		Set objShell = CreateObject("WScript.Shell") 
+		Set objPing = objShell.Exec("ping " & strComp)
+		strResult = LCase(objPing.StdOut.ReadAll)
+		If InStr(strResult, "bytes=") Then
+		Set objReg = GetObject("winmgmts:{impersonationLevel=impersonate}!\\" & strComp & "\root\default:StdRegProv")
+		strKeyPath = "SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer"
+		strValueName = "NoDriveTypeAutoRun"
+		dwValue = 255
+		objReg.SetDWORDValue HKEY_LOCAL_MACHINE, strKeyPath, strValueName, dwValue
+		If strComp = "." Then
+			MsgBox "Autorun disabled on this machine!", vbExclamation
+		Else
+			MsgBox "Autorun disabled on " & strComp	& "!", vbExclamation
+		End If
+		Else
+			MsgBox "The target machine could not be reached!", vbOkOnly+vbInformation, "Target not responding"
+		End If
+	End Sub
+'<!--#######################[ Sub for File Search ]#######################-->
+	Sub FileSearch
+	Const ForWriting = 2
+	DIM objCompNames, strComputer
+	Set objResultsFile = fso.OpenTextFile("c:\Phrasekeys\FileSearchResults.txt", ForWriting, True)
+	strCompFile = CompFile.Value
+	strComputer = CompName.Value	
+	
+	sFile = InputBox("Enter path where file should be. Only enter the part after the 'C:\' " & strComputer & "?", vbOkCancel, "Specify File Location")
+		If sFile = vbCancel Then
+			Exit Sub
+		End If
+	Call Buttons(strSelection)
+	
+	If strCompFile <> "" Then
+		Call Buttons(strSelection)
+	Else If strComputer = "" Then
+		strSelection = "Loc"
+	Else
+		strSelection = "Rem"
+	End If
+	End If
+	
+		
+	Select Case strSelection
+		Case "Loc"
+			MsgBox"To search your machine use the tools built into Windows.", vbOkOnly, "Come on now!"
+			Exit Sub
+		Case "Rem"			
+				If (fso.FileExists("\\" & strComputer & "\c$\" & sFile)) Then
+					objResultsFile.WriteLine(strComputer & " has the requested file!")
+				Else
+					Set objShell = CreateObject("WScript.Shell") 
+					Set objPing = objShell.Exec("ping " & strComputer)
+					strResult = LCase(objPing.StdOut.ReadAll)
+						If InStr(strResult, "reply from") Then
+							objResultsFile.Writeline(strComputer & " DOES NOT HAVE THE FILE!!!*************************")
+						Else
+							objResultsFile.Writeline(strComputer & " IS NOT REACHABLE--------------------------------------")
+						End If		
+				End If
+		Case "Mult"
+			Set objCompNames = fso.OpenTextFile(strCompFile)
+			Do Until objCompNames.AtEndOfStream
+			strComputer = objCompNames.ReadLine
+				If (fso.FileExists("\\" & strComputer & "\c$\" & sFile)) Then
+					objResultsFile.Writeline(strComputer & " has the requested file!")
+				Else
+					Set objShell = CreateObject("WScript.Shell") 
+					Set objPing = objShell.Exec("ping " & strComputer)
+					strResult = LCase(objPing.StdOut.ReadAll)
+						If InStr(strResult, "reply from") Then
+							objResultsFile.Writeline(strComputer & " DOES NOT HAVE THE FILE!!!*************************")
+						Else
+							objResultsFile.Writeline(strComputer & " IS NOT REACHABLE--------------------------------------")
+						End If
+				End If
+			Loop
+			objCompNames.Close
+		Case "Cancelled"
+			Exit Sub
+		End Select
+
+	Set objShell = CreateObject("WScript.Shell")
+	objShell.Run "notepad.exe c:\Phrasekeys\FileSearchResults.txt"
+	objResultsFile.Close
+	End Sub
+'<!--#######################[ Sub to Copy User selected file to target ]#######################-->
+	Sub CopyThis
+	Dim objCBro, objCFolder, strFileName, strFilePath, strCopToPath
+	strComp = CompName.Value
+	strComList = CompFile.Value
+	Set objCopBro = CreateObject("Shell.Application")
+	Set objCFolder = objCopBro.BrowseForFolder(0, "Folder containing file to copy", 0, 17)
+	If IsValue(objCFolder) Then
+		strFilePath = objCFolder.self.Path
+		strFileName = InputBox("Enter the name of the file in " & strFilePath & " that you wish to copy to the target.", "File name with extension")
+		strFromPath = strFilePath & "\" & strFileName
+		
+		If strComList <> "" Then
+			Call Buttons(strSelection)
+				Else If strComp = "" Then
+					strSelection = "Loc"
+				Else
+					strSelection = "Rem"
+				End If
+		End If
+		
+		Select Case(strSelection)
+		Case "Loc"
+			MsgBox "There is no local copy option for this task. There are quicker ways to copy a file on this machine to a different place on this machine!", vbOkOnly+vbInformation, "Come on now!"
+			Exit Sub
+		Case "Rem"
+			On Error Resume Next
+			strCopToPath = "\\" & strComp & "\c$\Temp\"
+			fso.CopyFile strFromPath, strCopToPath, True				
+				If Err <> 0 Then
+					MsgBox "Either the target was not reachable or the file path or name is invalid. Use 'Ping Computer' task to verify that machine is reachable and check paths." _
+					, vbOkOnly+vbExclamation, "Something ain't right!"
+				Else
+					MsgBox strFromPath & " was copied to the C:\Temp directory on " & strComp, vbInformation, "Success!"
+				End If
+		Case "Mult"
+			On Error Resume Next
+			Set objRunList = fso.OpenTextFile(strComList, 1)
+			strDisplay = ""
+			Do Until objRunList.AtEndOfStream
+				strSingle = objRunList.Readline
+				strCopToPath = "\\" & strSingle & "\c$\Temp\"
+				fso.CopyFile strFromPath, strCopToPath, True
+				strDisplay = strDisplay & strSingle & ", "
+			Loop
+				If Err <> 0 Then
+					MsgBox "Either the target was not reachable or the file path or name is invalid. Use 'Ping Computer' task to verify that machine is reachable and check paths." _
+					, vbOkOnly+vbExclamation, "Something ain't right!"
+				Else
+					MsgBox strFromPath & " was copied to the C:\Temp directory on " & strDisplay, vbInformation, "Success!"
+				End If
+		Case "Cancelled"
+			Exit Sub
+		End Select
+	Else
+		Exit Sub
+	End If
+	End Sub
+'<!--#######################[ Sub Get Machine Info ]#######################-->
+	Sub GetInfo
+	On Error Resume Next
+	strComputer = CompName.Value
+
+	If strComputer = "" Then
+		Set wshNetwork = CreateObject("WScript.Network")
+		strComputer = wshNetwork.ComputerName
+	Else
+		Set objPing = GetObject("winmgmts:{impersonationLevel=impersonate}")._
+			ExecQuery("select * from Win32_PingStatus where address = '"_
+			& strcomputer & "'")
+
+		For Each objStatus in objPing
+			If IsNull(objStatus.StatusCode) or objStatus.StatusCode<>0 Then
+				MsgBoxValue = MsgBox ("Computer " & strComputer & " cannot be reached", 65, "Computer unavailable")
+				Exit Sub
+			End If
+		Next
+	End If
+
+	Set objWMIService = GetObject("winmgmts:" & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+		If Err.Number <> 0 Then
+			MsgBox "The machine is not responding to the query. It might have a WMI problem. ******Exiting Task.******"_
+			& vbCr & vbCr & "Error: " & Hex(Err.Number) & vbCr & "Source: " & Err.Source & vbCr & "Description: " & Err.Description,_
+			vbInformation, "Probable WMI error on target machine!"
+			WriteLogEntry("'Get Info' Sub could not query remote machine due to possible WMI error.")
+			Exit Sub
+		End If
+
+	'Define constants
+	Const wbemFlagReturnImm = &h10
+	Const wbemFlagForward = &h20
+	Const HARD_DISK = 3
+
+	'Query the WMI information of the computer
+	Set colItems = objWMIService.ExecQuery( "Select * from Win32_ComputerSystem", , 48 )
+	For Each objItem in colItems
+		strComputer = objItem.Name
+	Next
+
+	'Query processor properties
+	Set colItems = objWMIService.ExecQuery("SELECT * FROM Win32_Processor", "WQL", wbemFlagReturnImm + wbemFlagForward)
+
+	'Prepare display of results for processor entries
+	For Each objItem In colItems
+		ProcType = ltrim(objItem.Name)
+	Next
+
+	Set objDomain = getObject("LDAP://rootDse")
+	DC = objDomain.Get("dnsHostName")
+
+	Set colSettings = objWMIService.ExecQuery _
+		("Select * from Win32_OperatingSystem")
+
+	'Query the OS properties
+	Set colOperatingSystems = objWMIService.ExecQuery _
+		("SELECT * FROM Win32_OperatingSystem")
+	For Each objOperatingSystem in colOperatingSystems
+		OS = objOperatingSystem.Caption
+		OSVersion = objOperatingSystem.Version
+	Next
+
+	'Set variable values for OS properties retrieved
+	For Each objOperatingSystem in colSettings
+		OSServicePack = objOperatingSystem.ServicePackMajorVersion
+		WinDir = objOperatingSystem.WindowsDirectory
+		PhysMem = Int(objOperatingSystem.FreePhysicalMemory / (1024))
+		VirtMem = Int(objOperatingSystem.TotalVirtualMemorySize / (1024))
+		AvailVirtMem = Int(objOperatingSystem.FreeVirtualMemory / (1024))
+	Next
+
+	'Collect information about the computer itself, or the motherboard if it's a custom-built PC
+	Set colSettings = objWMIService.ExecQuery _
+		("Select * from Win32_ComputerSystem")
+
+	For Each objComputer in colSettings
+		ComputeName = objComputer.Name
+			CompManufacturer = objComputer.Manufacturer
+			CompModel = objComputer.Model
+		CompPhysMem = Int(objComputer.TotalPhysicalMemory / (1048576))
+	Next
+
+	'Find out who is logged in on the computer and store the username
+	Set colComputer = objWMIService.ExecQuery _
+		("Select * from Win32_ComputerSystem")
+	For Each objComputer in colComputer
+		UserName = objComputer.UserName
+	Next
+
+	Set colSettings = objWMIService.ExecQuery _
+		("Select * from Win32_Processor")
+
+	Set colSettings = objWMIService.ExecQuery _
+		("Select * from Win32_BIOS")
+
+	For Each objBIOS in colSettings
+		BIOSVer = objBIOS.Version
+	Next
+
+	'Get hard drive information
+	strComputer = "."
+	Set colDisks = objWMIService.ExecQuery _
+		("Select * from Win32_LogicalDisk Where DriveType = " & HARD_DISK & "")
+
+	For Each objDisk in colDisks
+		HDID = objDisk.DeviceID       
+		HDFree = Int(objDisk.FreeSpace / (1073741824))
+	Next
+
+	'Begin displaying the information
+	strOutput = "Computer Information" & vbCr
+	strOutput = strOutput & "Computer Name:" & vbTab & vbTab & ComputeName & vbCr
+
+	'Get IP address of the computer and display it in the window
+	Set IPConfigSet = objWMIService.ExecQuery _
+		("Select * from Win32_NetworkAdapterConfiguration Where IPEnabled=TRUE")
+ 
+	For Each IPConfig in IPConfigSet
+		If Not IsNull(IPConfig.IPAddress) Then
+			For i=LBound(IPConfig.IPAddress) to UBound(IPConfig.IPAddress)
+				strOutput = strOutput & "IP Address:" & vbTab & vbTab & IPConfig.IPAddress(i) & vbCr
+			Next
+		End If
+	Next
+
+	strOutput = strOutput & "Computer Manufacturer:" & vbTab & CompManufacturer & vbCr
+	strOutput = strOutput & "Computer Model:" & vbTab & vbTab & CompModel & vbCr
+	strOutput = strOutput & "Processor Type:" & vbTab& vbTab & ProcType & vbCr
+	strOutput = strOutput & "BIOS Version:" & vbTab & vbTab & BIOSVer & vbCr
+	strOutput = strOutput & "User Logged In:" & vbTab & vbTab & UserName & vbCr
+	strOutput = strOutput & "DC Logged Onto:" & vbTab & vbTab & DC & vbCr & vbCr
+
+	strOutput = strOutput & "Operating System Information" & vbCr
+	strOutput = strOutput & "OS:" & vbTab & vbTab & vbTab & OS & vbCr
+	strOutput = strOutput & "OS Version:" & vbTab & vbTab & OSVersion & vbCr
+	strOutput = strOutput & "OS Service Pack:" & vbTab & vbTab & OSServicePack & vbCr
+	strOutput = strOutput & "Windows Directory:" & vbTab & vbTab & WinDir & vbCr & vbCr
+
+	strOutput = strOutput & "Hard Drive Information" & vbCr
+	strOutput = strOutput & "Hard Drive ID:" & vbTab & vbTab & HDID & vbCr
+	strOutput = strOutput & "Free Space:" & vbTab & vbTab & HDFree & " GB" & vbCr & vbCr
+
+	strOutput = strOutput & "Memory Information" & vbCr
+	strOutput = strOutput & "Total Physical Memory:"  & vbTab& CompPhysMem & " MB" & vbCr
+	strOutput = strOutput & "Free Physical Memory:" & vbTab & PhysMem & " MB" & vbCr
+	strOutput = strOutput & "Total Virtual Memory:" & vbTab & VirtMem & " MB" & vbCr
+	strOutput = strOutput & "Free Virtual Memory:" & vbTab & vbTab & AvailVirtMem & " MB" & vbCr
+
+	MsgBox strOutput
+	End Sub
+'<!--#######################[ Sub COPS WMI Check ]#######################-->
+	Sub CopsWMI
+		CN = CompName.Value
+		Set objWshShell = CreateObject("WScript.Shell")
+		strCommand = "C:\Phrasekeys\Subs\WMICheck.vbs " & CN
+		objWshShell.Run(strCommand)
+	End Sub
+'<!--#######################[ Sub Whos Logged In ]#######################-->
+	Sub LoggedIn
+	Dim strCompName 
+	Dim objWMIServices 
+	Dim objUserSet 
+	Dim oWshShell 
+	Dim User 
+	Dim colOperatingSystems 
+	On Error Resume Next 
+	Set oWshShell = CreateObject("Wscript.Shell") 
+	strCompName = CompName.Value
+	objWMIServices = "winmgmts:{impersonationLevel=impersonate}!//"& strCompName &"" 
+	Set objUserSet = GetObject( objWMIServices ).InstancesOf ("Win32_ComputerSystem") 
+		If Err.number <> 0 Then 
+			If Err.Number = "-2147217405" Then 
+			btnCode = oWshShell.Popup ("Access Denied" & Chr(13) & "Try again with alternate credentials?" , 30, strCompName, 4+32) 
+			WriteLogEntry("'Logged In' sub got 'Access Denied' error on " & strCompName)
+			Select Case BtnCode 
+				case 6       altCreds() 
+				case 7       oWshShell.Popup "Process has been cancelled by user",5,"Notice...",16 
+					Exit Sub
+				case -1     oWshShell.Popup "No user input. Process has been aborted.",10,"Notice...",64 
+					Exit Sub   
+			End Select 
+
+				ElseIf Err.Number = "462" Then 
+					oWshShell.Popup "Host Unreachable", 10, strCompName, 48
+					WriteLogEntry("'Logged In' sub got 'Host Unreachable' on " & strCompName)
+				Else 
+					oWshShell.Popup "Attempt to query current user on: " & strCompName & " has failed." & Chr(13) & Err.Number & " : " & Err.Description, 10, strCompName, 48 
+				End If 
+			Err.Clear 
+			Exit Sub 
+			Else 
+				Set colOperatingSystems = GetObject( objWMIServices ).InstancesOf ("Win32_OperatingSystem") 
+
+					If Err.Number <> 0 Then WScript.Echo Err.Number & " : " & Err.Description 
+						Err. Clear 
+					End If 
+
+			for each User in objUserSet 
+				If User.UserName <> "" Then 
+					oWshShell.Popup "The current user on " & strCompName & " is: " & User.UserName & Chr(13) & upTime(strCompName), 10, strCompName, 64 
+				Else 
+					oWshShell.Popup "There are no users currently logged in at " & strCompName & Chr(13) & upTime(strCompName), 10, strCompName, 64 
+				End If 
+				Next 
+End Sub
+
+	Function WMIDateStringToDate(dtmBootup) 
+		WMIDateStringToDate = CDate(Mid(dtmBootup, 5, 2) & "/" & Mid(dtmBootup, 7, 2) & "/" & Left(dtmBootup, 4) _ 
+		& " " & Mid (dtmBootup, 9, 2) & ":" & Mid(dtmBootup, 11, 2) & ":" & Mid(dtmBootup, 13, 2)) 
+	End Function 
+
+	Function upTime(strCompNames) 
+		Dim objOS 
+		Dim dtmBootup 
+		Dim dtmLastBootupTime 
+		Dim dtmSystemUptime 
+		On error Resume Next 
+		upTime = 0 
+
+		For Each objOS in colOperatingSystems 
+			dtmBootup = objOS.LastBootUpTime 
+			dtmLastBootupTime = WMIDateStringToDate(dtmBootup) 
+			dtmSystemUptime = "Last system reboot occurred " & DateDiff("h", dtmLastBootUpTime, Now) & " hours, " & Int(DateDiff("n", dtmLastBootUpTime, Now)/60) & " minutes, " & DateDiff("n", dtmLastBootUpTime, Now) Mod 60 & " seconds ago."  
+				If Err.Number =0 Then 
+					upTime = dtmSystemUptime 
+				Else 
+					upTime = "Last reboot time cannot be retrieved from " & strCompNames
+				End If 
+			Err.Clear 
+		Next 
+	End Function
+
+	Function altCreds(sHost) 
+		Dim sUser 
+		Dim sPass 
+		Dim oSWbemLocator 
+		Dim oSWbemServices 
+
+		sUser = InputBox("Please enter the Administrator Name: ") 
+		sPass = InputBox("Please enter the administrator password: ") 
+		On Error Resume Next 
+		Set oSWbemLocator = CreateObject("WbemScripting.SWbemLocator") 
+		Set oSWbemServices = oSWbemLocator.ConnectServer _ 
+		(sHost, "root\cimv2", sUser, sPass) 
+
+		If Err.Number <> 0 Then 
+			oWshShell.Popup "WMI Connection was not successful. "  & Chr(13) & Err.Description, 10, Err.Source & " on " & sHost, 48 
+		Else 
+			Set objUserSet = oSWbemServices.ExecQuery ("Select * from Win32_ComputerSystem") 
+			Set colOperatingSystems = oSWbemServices.ExecQuery ("Select * from Win32_OperatingSystem") 
+		End If 
+	End Function
+'<!--#######################[ Sub Get Local Network Drives and Printers ]#######################-->	
+	Sub ListMappedDrives
+	Dim objNetwork 
+	Dim colDrives 
+	Dim i 
+	Dim objFSO 
+	Dim objFile 
+	Dim strComputer 
+	Dim objWMIService 
+	Dim objPrinter 
+	Dim colInstalledPrinters 
+	Dim colItems 
+	Dim objItem 
+	Dim objShell
+
+	strComputer = CompName.Value
+		If strComputer = "." or strComputer = "" Then
+			strComputer = "."
+		Else
+			Call RemoteDrives
+			Exit Sub
+		End If
+ 
+	Const ForWriting = 2 
+	Set objFSO = CreateObject("Scripting.FileSystemObject") 
+	Set objFile = objFSO.CreateTextFile("C:\Phrasekeys\Drives.txt", ForWriting) 
+	Set objNetwork = CreateObject("WScript.Network") 
+	Set colDrives = objNetwork.EnumNetworkDrives 
+	For i = 0 to colDrives.Count-1 Step 2 
+	objFile.WriteLine colDrives.Item(i) & vbTab & colDrives.Item (i + 1) 
+	objFile.WriteLine " " 
+	objFile.WriteLine "********************************************************************" 
+	objFile.WriteLine " " 
+	Next
+	
+	Set objWMIService = GetObject("winmgmts:" _ 
+	 & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2") 
+	Set colInstalledPrinters = objWMIService.ExecQuery _ 
+	 ("SELECT * FROM Win32_Printer") 
+	
+	For Each objPrinter in colInstalledPrinters 
+	objFile.WriteLine "Name: " & objPrinter.Name 
+	objFile.WriteLine "Port: " & objPrinter.PortName 
+	objFile.WriteLine " " 
+	objFile.WriteLine "********************************************************************" 
+	objFile.Writeline " " 
+	Next 
+ 
+	Set colItems = objWMIService.ExecQuery _ 
+     ("Select * from Win32_ComputerSystem") 
+	
+	For Each objItem in colItems 
+		objfile.Writeline "Computer Name: " & objItem.Name 
+	Next 
+	Set objShell = CreateObject("WScript.Shell")
+	objShell.Run "notepad.exe c:\Phrasekeys\drives.txt"
+	Set objShell = Nothing
+	objFile.Close
+	End Sub
+'<!--#######################[ Sub Get Remote Network Drives and Printers ]#######################-->
+	Sub RemoteDrives
+	strNoip = MsgBox("Make sure you are using the hostname and not the IP address for this to work! Press 'Cancel' if you have an IP address in the field or 'OK' to continue." _
+	, vbOkCancel+vbExclamation, "IP address will not work here")
+	If strNoip = vbOk Then
+	strComputer = CompName.Value	
+	strOutput=""
+	Set objShell = CreateObject("WScript.Shell") 
+	Set objPing = objShell.Exec("ping " & strComputer)
+	strResult = LCase(objPing.StdOut.ReadAll)
+	If InStr(strResult, "bytes=") Then
+		Const HKEY_USERS = &H80000003
+		Set objWbem = GetObject("winmgmts:")
+		Set objRegistry = GetObject("winmgmts://" & strComputer & "/root/default:StdRegProv")
+		Set objWMIService = GetObject("winmgmts:"  & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+
+		'Go and get the currently logged on user by checking the owner of the Explorer.exe process. 
+		Set colProc = objWmiService.ExecQuery("Select Name from Win32_Process" & " Where Name='explorer.exe'")
+
+		If colProc.Count > 0 Then
+			For Each oProcess In colProc
+				oProcess.GetOwner sUser, sDomain
+			Next
+		End If
+
+		'Loop through the HKEY_USERS hive until (ignoring the .DEFAULT and _CLASSES trees) until we find the tree that
+		'corresponds to the currently logged on user.
+		lngRtn = objRegistry.EnumKey(HKEY_USERS, "", arrRegKeys)    
+    
+		For Each strKey In arrRegKeys
+		If UCase(strKey) = ".DEFAULT" Or UCase(Right(strKey, 8)) = "_CLASSES" Then
+		Else
+		Set objSID = objWbem.Get("Win32_SID.SID='" & strKey & "'")
+
+		'If the account name of the current sid we're checking matches the accountname we're looking for Then
+		'enumerate the Network subtree
+			If objSID.accountname = sUser Then
+				regpath2enumerate = strkey & "\Network" 'strkey is the SID
+				objRegistry.enumkey hkey_users, regpath2enumerate, arrkeynames
+    
+		stroutput = stroutput & vbCr & "Mapped Drive info (if available):" & vbCr
+		On Error Resume Next	 
+		'If the array has elements, go and get the drives info from the registry
+				If Not (IsEmpty(arrkeynames)) Then
+					For Each subkey In arrkeynames
+						regpath = strkey & "\Network\" & subkey
+						regentry = "RemotePath"
+						objRegistry.getstringvalue hkey_users, regpath, regentry, dapath
+						stroutput = stroutput & subkey & ":" & vbTab & dapath & vbCr
+					Next
+				End If
+			End If
+		End If
+		Next
+	
+		stroutput = stroutput & vbCr & "******************************" & vbCr & "Drives of unknown type (if available):" & vbCr
+		Set colDrives = objWMIService.ExecQuery("SELECT * FROM Win32_LogicalDisk Where DriveType = 0") 
+		For Each objDrive in colDrives
+			UnName = objDrive.DeviceID
+			UnPort = objDrive.VolumeName
+			stroutput = stroutput & UnName & "\" & vbTab & UnPort & vbCr
+		Next
+	
+		stroutput = stroutput & vbCr & "******************************" & vbCr & "Removable drives (if available):" & vbCr
+		Set colDrives = objWMIService.ExecQuery("SELECT * FROM Win32_LogicalDisk Where DriveType = 2") 
+		For Each objDrive in colDrives
+			RemName = objDrive.DeviceID
+			RemPort = objDrive.VolumeName
+			stroutput = stroutput & RemName & "\" & vbTab & RemPort & vbCr
+		Next
+	
+		stroutput = stroutput & vbCr & "******************************" & vbCr & "Local drives (if available):" & vbCr
+		Set colDrives = objWMIService.ExecQuery("SELECT * FROM Win32_LogicalDisk Where DriveType = 3") 
+		For Each objDrive in colDrives
+			DriveName = objDrive.DeviceID
+			DrivePort = objDrive.VolumeName
+			stroutput = stroutput & DriveName & "\" & vbTab & DrivePort & vbCr
+		Next
+	
+		stroutput = stroutput & vbCr & "******************************" & vbCr & "Network Printer info (if available):" & vbCr
+		Set colInstalledPrinters = objWMIService.ExecQuery("SELECT * FROM Win32_Printer Where Local = FALSE") 
+		For Each objPrinter in colInstalledPrinters
+			netPrntName = objPrinter.Name
+			netPrntPort = objPrinter.PortName
+			stroutput = stroutput & netPrntName & ":" & vbTab & vbTab & netPrntPort & vbCr
+		Next
+	
+		stroutput = stroutput & vbCr & "******************************" & vbCr & "Local Printer info (if available):" & vbCr
+		Set colInstalledPrinters = objWMIService.ExecQuery("SELECT * FROM Win32_Printer Where Local = TRUE")
+		For Each objPrinter in colInstalledPrinters
+			prntName = objPrinter.Name
+			prntPort = objPrinter.PortName
+			stroutput = stroutput & prntName & ":" & vbTab & vbTab & prntPort & vbCr
+		Next
+	
+		strOutput="Drives and printers for " & suser & "using PC "& strComputer & vbCr & vbCr & stroutput
+		MsgBox stroutput
+	Else
+		MsgBox "Target machine could not be reached!", vbOkOnly+vbInformation, "Target did not respond to ping."
+	End If
+	End If
+	End Sub
+'<!--#######################[ Sub to Uninstall the SCCM Client ]#######################-->
+	Sub UnCCM
+	strComp = CompName.Value	
+		Set objShell = CreateObject("WScript.Shell")
+		If strComp = "" Then
+			strBits = MsgBox("Is your machine running 32-bit Windows?", vbYesNo, "Windows version")
+			If strBits = vbYes Then 
+				objShell.Run "C:\Phrasekeys\Subs\UnCCM32.bat"
+			Else
+				objShell.Run "C:\Phrasekeys\Subs\UnCCM64.bat"
+			End If
+		Else
+			Set objShell = CreateObject("WScript.Shell") 
+			Set objPing = objShell.Exec("ping " & strComp)
+			strResult = LCase(objPing.StdOut.ReadAll)
+			If InStr(strResult, "bytes=") Then
+				strBits = MsgBox("Is the target machine running 32-bit Windows?", vbYesNo, "Windows version")
+				If strBits = vbYes Then
+					strFromPath = "C:\Phrasekeys\Subs\UnCCM32.bat"
+					strRemFile = "UnCCM32.bat"
+					Call CopyIT
+					Call Scheduled
+				Else
+					strFromPath = "C:\Phrasekeys\Subs\UnCCM64.bat"
+					strRemFile = "UnCCM64.bat"
+					Call CopyIT
+					Call Scheduled
+				End If
+			Else
+				MsgBox "The target machine could not be reached!", vbOkOnly+vbInformation, "Target not responding"
+			End If
+		End If
+	End Sub
+'<!--#######################[ Sub to Clean Temp Directories ]#######################-->
+	Sub CleanTemp
+	var1 = CompName.Value
+	strMulti = CompFile.Value
+	strSelection = InputBox("Type 'Loc' for a local cleanup and 'Rem' to cleanup a remote machines, or 'Mult' for a list of machines.", "Run against what exactly?")
+	'If strMulti <> "" Then
+		'Call Buttons(strSelection)
+		
+	'Else If var1 = "" Then
+	'	strSelection = "Loc"
+	'Else
+	'	strSelection = "Rem"
+	'End If
+	'End If
+	
+	Select Case(strSelection)
+		Case "Loc"
+			Set objWMIService = GetObject("winmgmts:\root\cimv2")
+			Set colOperatingSystem = objWMIService.ExecQuery("Select * from Win32_OperatingSystem")
+				For Each objOperatingSystem in colOperatingSystem
+					Version = objOperatingSystem.Version
+				Next
+				
+				If InStr(1, Version, "6.1") > 0 Then
+					Set objShell = CreateObject("WScript.Shell")
+					strCmds = "C:\Phrasekeys\Subs\ClearCache7.bat "
+					objShell.Run strCmds
+				Else
+					Set objShell = CreateObject("WScript.Shell")
+					strCmds = "C:\Phrasekeys\Subs\ClearCacheXP.bat "
+					objShell.Run strCmds
+					Exit Sub
+				End If
+		Case "Rem"
+			Set objAppShell = CreateObject("Shell.Application")
+			strCmds = "C:\Phrasekeys\Subs\delTemp.bat "
+			objAppShell.ShellExecute strCmds, var1, "uac", "runas", 1
+		Case "Mult"
+			Set objAppShell = CreateObject("Shell.Application")
+			strCmdo = "C:\Phrasekeys\Subs\MultiDelTemp.bat "
+			objAppShell.ShellExecute strCmdo, strMulti, "uac", "runas", 1
+		Case "Cancelled"
+			Exit Sub
+	End Select	
+	End Sub
+'<!--#######################[ Sub to re-register MsiExec ]#######################-->
+	Sub FixMSI
+		strComp = CompName.Value
+		If strComp = " " or strComp = "." Then
+			Set objShell = CreateObject("WScript.Shell")
+			objShell.Run "C:\Phrasekeys\Subs\MsiRegsvr.bat"
+		Else
+			strRemFile = "MsiRegsvr.bat"
+			strFromPath = "C:\Phrasekeys\Subs\" & strRemFile
+			Call CopyIT
+			Call TwoMinutes
+			Exit Sub
+		End If
+	End Sub
+'<!--#######################[ Sub Bounce ]#######################-->
+	  Sub Bounce
+	  Dim objShell
+	  Set objShell = CreateObject("WScript.Shell")
+	  objShell.Run "C:\WINDOWS\system32\shutdown.exe -r -t 00"
+	  End Sub
+'<!--#######################[ Sub Scheduled Local Reboot ]#######################-->
+	Sub SchReboot
+		Dim objshell
+		Dim intSleepTime : intSleepTime = (DateBounceMins*60) 
+
+		set objShell = CreateObject("WScript.Shell")             
+		NewBounce = DateAdd("N", DateBounceMins, now())
+		intSure = MsgBox("This will reboot the computer at " & NewBounce & ". Continue?", vbquestion + vbyesno,"Schedule Reboot?") 
+			If intSure = vbNo then
+				Exit Sub
+			Else
+				strBounce = "shutdown.exe -r -f -t " & intSleepTime 
+				objShell.Run strBounce
+			End If
+	End Sub
+'<!--#######################[ Sub Killit ]#######################-->	
+	  Sub Killit
+	  Dim objShell
+	  Set objShell = CreateObject("WScript.Shell")
+	  objShell.Run("shutdown.exe -s -f -t 00")
+	  End Sub
+'<!--#######################[ Sub SlowDeath ]#######################-->
+	  Sub SlowDeath
+      Dim objshell
+	  Dim intSleepTime : intSleepTime = (DateKillMins*60) 
+
+	  set objShell = CreateObject("WScript.Shell")             
+	  NewDate = DateAdd("N", DateKillMins, now())
+	  intSure = MsgBox("This will shutdown the computer at " & NewDate & ". Continue?", vbquestion + vbyesno,"Shutdown Computer") 
+		If intSure = vbNo then
+			Exit Sub
+		Else
+		    strShutdown = "shutdown.exe -s -f -t " & intSleepTime 
+			objShell.Run strShutdown
+		End If
+	 End sub
+'<!--#############################[ Sub Populate Notes Dropdown]#############################-->
+	 Sub PopulateDropDown
+	 Set objFile = nothing
+	 strBlank = ""
+	 Dim strPath, strDirectory, objFile, colFiles
+	 Set objFso = CreateObject("Scripting.FileSystemObject")
+	 strDirectory = ("C:\Phrasekeys\Phrases")
+	 Set colFiles = objFso.GetFolder(strDirectory).Files
+	 
+	 For Each objFile in colFiles
+		Set objOption = Document.CreateElement("OPTION")
+		objOption.Text = objFso.GetBaseName(objFile.Name)
+		objOption.Value = objFso.GetBaseName(objFile.Name)
+		myList.Add(objOption)
+	 Next
+	 
+	 End Sub
+'<!--#############################[ Sub Populate Emails Dropdown]#############################-->
+	Sub PopulateEmails
+	 Set objFile = nothing
+	 Dim strPath, strDirectory, objFile, colFiles
+	 Set objFso = CreateObject("Scripting.FileSystemObject")
+	 strDirectory = ("C:\Phrasekeys\Emails")
+	 Set colFiles = objFso.GetFolder(strDirectory).Files
+	 
+	 For Each objFile in colFiles
+		Set objEOption = Document.CreateElement("OPTION")
+		objEOption.Text = objFso.GetBaseName(objFile.Name)
+		objEOption.Value = objFso.GetBaseName(objFile.Name)
+		myEmails.Add(objEOption)
+	 Next
+	 
+	 End Sub
+'<!--#############################[ Sub WriteLogEntry ]#############################-->	 	 
+Sub WriteLogEntry( strMessage )
+	Collect(strmessage)
+	strDir = ("C:\Phrasekeys")
+    Set objLogFile = fso.OpenTextFile("C:\Phrasekeys\replog.txt", 8, True, 0)
+    objLogFile.WriteLine Now() & " :: " & strMessage
+    objLogFile.Close
+End Sub
+'<!--#############################[ Sleep ]#############################-->
+	Sub Sleepy(iSeconds)
+		Dim oShell : Set oShell = CreateObject("WScript.Shell")
+		oShell.Run "cmd /c ping localhost -n " & iSeconds,0,True
+	End Sub
+'<!--#############################[ Sub Phrasekeys Notes ]#############################-->	
+	Sub PkWord
+	Dim strPath, strDirectory, strPk
+	Set objFSO = CreateObject("Scripting.FileSystemObject")
+	strPk = mylist.Value
+	If strPk = "" Then
+		Exit Sub
+	End If
+	strDirectory = ("C:\Phrasekeys\Phrases")
+	Set strPath = objFSO.OpenTextFile("C:\Phrasekeys\Phrases\" & strPk & ".txt")							
+	strPrint = strPath.ReadLine																			
+	PassPhrase()
+	Collect("Phrasekeys Notes generator used")
+	End Sub
+'<!--#############################[ Sub Phrasekeys Email ]#############################-->	
+	Sub Email
+		strEmFile = myEmails.Value
+		If strEmFile = "" Then
+			Exit Sub
+		End If
+		strClient = InputBox("What is the email address of the person you wish to email")
+			If strClient = "" Then
+				Exit Sub
+			End If
+		strReceipt = MsgBox("Would you like a read receipt request?", vbYesNo)
+			If strReceipt = vbYes Then
+				strReceipt = "True"
+			Else
+				strReceipt = "False"
+			End If
+		Set objExcel = CreateObject("Excel.Application")
+		Set objWorkbook = objExcel.Workbooks.Open("C:\Phrasekeys\Emails\" & strEmFile & ".xlsx")
+		Set objWorksheet = objWorkbook.Sheets("Sheet1")
+		Set objSubject = objWorksheet.cells(1, 1)
+		Set objBody = objWorksheet.cells(3, 1)
+		Set objApp = CreateObject("Outlook.Application")
+		Set objMail = objApp.CreateItem(olMailItem)
+			With objMail
+				.To = strClient
+				.Subject = objSubject.Value
+				.ReadReceiptRequested = strReceipt
+				.Body = objBody.Value
+			End With
+		objMail.Display
+		objWorkbook.Close
+		Collect("Phrasekeys email generator used")
+	End Sub
+'<!--#############################[ Sub Clean Web ]#############################-->	
+	Sub CleanWeb
+	Dim intAnswer
+	intAnswer = MsgBox ("This script will completely clear your Temporary Internet files, cookies, form data, and passwords. Close all IE windows before continuing!", _ 
+	vbOkCancel+vbExclamation, "WARNING!")
+		If intAnswer = vbCancel Then
+			Exit Sub
+		Else
+			'IE Cleanup
+			Set WshShell = CreateObject("WScript.Shell")   
+			WshShell.run "RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 8"  	'To clear temporary Internet files   
+			WshShell.run "RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 2"  	'To clear browsing cookies
+			WshShell.run "RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 16"	'To clear form data
+			WshShell.run "RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 32"	'To clear passwords
+		End If
+	End Sub
+'<!--#############################[ Sub Get Serial Number ]#############################-->	
+	Sub SerNum
+		strComputer = CompName.Value
+		If strComputer <> "" then
+			Set objShell = CreateObject("WScript.Shell") 
+			Set objPing = objShell.Exec("ping " & strComputer)
+			strResult = LCase(objPing.StdOut.ReadAll)
+				If InStr(strResult, "could not") or InStr(strResult, "unreachable") Then
+					MsgBox "The target machine could not be reached!", vbOkOnly+vbInformation, "Target not responding"
+					Exit Sub
+				End If
+		Else
+			strComputer = "."
+		End If
+		
+		Set objWMIService = GetObject("winmgmts:" _
+		& "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+
+		Set colBIOS = objWMIService.ExecQuery _
+		("Select * from Win32_BIOS")
+	
+		For each objBIOS in colBIOS
+			strMan = "Manufacturer: " & objBIOS.Manufacturer & vbCr
+			strSn = "Serial Number: " & objBIOS.SerialNumber
+		Next
+		MsgBox "SERIAL NUMBER INFORMATION" & vbCr & vbCr & strComputer & vbCr & strMan & strSn
+	End Sub
+'<!--#############################[ Sub Bios Type ]#############################-->	
+	Sub BiosType
+	strComputer = CompName.Value
+		If strComputer <> "" then
+			Set objShell = CreateObject("WScript.Shell") 
+			Set objPing = objShell.Exec("ping " & strComputer)
+			strResult = LCase(objPing.StdOut.ReadAll)
+				If InStr(strResult, "could not") or InStr(strResult, "unreachable") Then
+					MsgBox "The target machine could not be reached!", vbOkOnly+vbInformation, "Target not responding"
+					Exit Sub
+				End If
+		Else
+			strComputer = "."
+		End If
+		
+	Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+
+	Set colBIOS = objWMIService.ExecQuery _
+    ("Select * from Win32_BIOS")
+	
+		For each objBIOS in colBIOS
+			MsgBox"Build Number: " & objBIOS.BuildNumber & vbCr _
+			& "Current Language: " & objBIOS.CurrentLanguage & vbCr _
+			& "Installable Languages: " & objBIOS.InstallableLanguages & vbCr _
+			& "Manufacturer: " & objBIOS.Manufacturer & vbCr _
+			& "Name: " & objBIOS.Name & vbCr _
+			& "Primary BIOS: " & objBIOS.PrimaryBIOS & vbCr _
+			& "Release Date: " & objBIOS.ReleaseDate & vbCr _
+			& "Serial Number: " & objBIOS.SerialNumber & vbCr _
+			& "SMBIOS Version: " & objBIOS.SMBIOSBIOSVersion & vbCr _
+			& "SMBIOS Major Version: " & objBIOS.SMBIOSMajorVersion & vbCr _
+			& "SMBIOS Minor Version: " & objBIOS.SMBIOSMinorVersion & vbCr _
+			& "SMBIOS Present: " & objBIOS.SMBIOSPresent & vbCr _
+			& "Status: " & objBIOS.Status & vbCr _
+			& "Version: " & objBIOS.Version
+		Next
+	End Sub
+'<!--#############################[ Sub for copying files to remote PC ]#############################-->
+	Sub CopyIt
+		Dim strToPath
+		strComp = CompName.Value
+		Set objShell = CreateObject("WScript.Shell") 
+		Set objPing = objShell.Exec("ping " & strComp)
+		strResult = LCase(objPing.StdOut.ReadAll)
+			If InStr(strResult, "bytes=") Then
+				strToPath = "\\" & strComp & "\c$\Temp\"
+				fso.CopyFile strFromPath, strToPath, True
+			Else
+				MsgBox "The target machine could not be reached!", vbOkOnly+vbInformation, "Target not responding"
+			End If
+	End Sub
+'<!--#############################[ Sub for Viewing Log File ]#############################-->
+	Sub ViewLog
+		objShell.Run "notepad.exe C:\Phrasekeys\replog.txt"
+		Collect("Log file viewed")
+	End Sub
+'<!--#############################[ Sub for Clearing Log File ]#############################-->
+	Sub ClearLog
+		Const ForWriting = 2
+		Set objLog = fso.OpenTextFile("C:\Phrasekeys\Replog.txt", ForWriting)
+		objLog.Write ""
+		objLog.Close
+		Collect("Log file cleared")
+	End Sub
+'<!--#############################[ Sub for Reporting Bugs ]#############################-->
+	Sub RepBug
+	Set objApp = CreateObject("Outlook.Application")
+		Set objMail = objApp.CreateItem(olMailItem)
+			With objMail
+				.To = "digitaljedi@linuxmail.org"
+				.Subject = "Bug Found in Toolbox App"
+				.Body = "Hey Joey, I found a bug! (Please include description, screenshots, and error messages if possible)"
+				.Attachments.Add "C:\Phrasekeys\replog.txt"
+			End With
+		objMail.Display	
+		Collect("Bug reported")
+	End Sub
+'<!--#############################[ Sub for Launching MSTSC ]#############################-->
+	Sub MSTSC
+		strComp = CompName.Value
+		objShell.Run("mstsc.exe /v:" & strComp)	
+		Collect("MSTSC launched")
+	End Sub
+'<!--#############################[ Sub for Launching cmd prompt w/ admin rights ]#############################-->
+	Sub CmdP
+		Set objRun = CreateObject("Shell.Application")
+		objRun.ShellExecute "cmd.exe ", "cmd.exe ", "uac", "runas", 1
+		Collect("Admin cmd prompt launched")
+	End Sub
+'<!--#############################[ Sub for showing main instrucitonal slideshow ]#############################-->
+	Sub PPTInst
+	Set objShell = CreateObject("WScript.Shell")
+	pFile = "C:\Phrasekeys\Instructions.ppsx"
+	objShell.Run "powerpnt.exe " & pFile, 1, False
+	Collect("Instructional ppsx viewed")
+	End Sub
+'<!--#############################[ Sub for showing Text Area instrucitonal slideshow ]#############################-->
+	Sub TAHelp
+	Set objShell = CreateObject("WScript.Shell")
+	pFile = "C:\Phrasekeys\TextArea.ppsx"
+	objShell.Run "powerpnt.exe " & pFile, 1, False
+	Collect("Text Area ppsx viewed")
+	End Sub
+'<!--#############################[ Sub for showing Power Options instrucitonal slideshow ]#############################-->
+	Sub POHelp
+	Set objShell = CreateObject("WScript.Shell")
+	pFile = "C:\Phrasekeys\PowerOptions.ppsx"
+	objShell.Run "powerpnt.exe " & pFile, 1, False
+	Collect("Power Options ppsx viewed")
+	End Sub
+'<!--#############################[ Sub for showing Phrasekeys instrucitonal slideshow ]#############################-->
+	Sub PKHelp
+	Set objShell = CreateObject("WScript.Shell")
+	pFile = "C:\Phrasekeys\Phrasekeys.ppsx"
+	objShell.Run "powerpnt.exe " & pFile, 1, False
+	Collect("Phrasekeys ppsx viewed")
+	End Sub
+'<!--#############################[ Sub for showing Scripted Tasks instrucitonal slideshow ]#############################-->
+	Sub STHelp
+	Set objShell = CreateObject("WScript.Shell")
+	pFile = "C:\Phrasekeys\ScriptedTasks.ppsx"
+	objShell.Run "powerpnt.exe " & pFile, 1, False
+	Collect("Scripted Tasks ppsx viewed")
+	End Sub
+'<!--#############################[ Sub for ChangeLog ]#############################-->
+	Sub ChangeLog
+	If (fso.FileExists("\\txdlls2cdfile08\alma_info\Joey_Thumb\JoeyScripts\shortkeys\ToolBox_changelog.txt")) Then
+		objShell.Run "notepad.exe \\txdlls2cdfile08\alma_info\Joey_Thumb\JoeyScripts\shortkeys\ToolBox_changelog.txt"
+		Collect("Changelog viewed")
+	Else
+		MsgBox "Changelog could not be reached. Check your connection and permissions to the share.", vbOkOnly+vbInformation, "File not found"
+		Collect("Changelog not viewed because of bad connection")
+	End If
+	End Sub
+'<!--#############################[ Sub for Activity log ]#############################-->
+	Sub Activ
+	
+
+	End Sub
+'<!--#############################[ Sub to collect activity log ]#############################-->
+	Sub Collect(strHmm)
+		Set objInfFile = fso.OpenTextFile("C:\Phrasekeys\replog.txt", 8, True, 0)
+		objInfFile.WriteLine Now() & " :: " & strHmm
+		objInfFile.Close
+	End Sub
+'<!--#############################[ Quit ]#############################-->
+    Sub Quit_onclick
+      Window.Close
+    End Sub
+'<!--#################[ Window Before Unload ]######################-->  
+	Sub Window_onBeforeUnload
+		intLeft = window.screenLeft
+		intTop = window.screenTop
+		
+		Const ForWriting = 2
+		Set objIni = fso.OpenTextFile("C:\Phrasekeys\HTA.ini", ForWriting)
+		objIni.Writeline intLeft & "," & intTop
+		objIni.Close
+	End Sub
+</SCRIPT>
+<script type="text/javascript">	
+						
+			function ClearFileInput(){
+			var oldInput = document.getElementById("CompFile");
+			var newInput = document.createElement("input");
+			newInput.type = "file";
+			newInput.id = oldInput.id;
+			newInput.Name = oldInput.Name;
+			newInput.className = oldInput.ClassName;
+			newInput.style.backgroundColor = oldInput.style.backgroundColor;
+			oldInput.parentNode.replaceChild(newInput, oldInput)
+			}
+		
+			//left this here in case I need it in the future
+			//this function switches windows
+			function changewindow(){
+			var oShell = new ActiveXObject("WScript.Shell");
+			var app = ("C:\\Phrasekeys\\Phrasekeys.hta");
+			oShell.Run(app);
+			window.close();
+			}
+
+			function PassPhrase(){
+			window.clipboardData.setData("Text",strPrint);
+			}
+</script>
+ <BODY STYLE="background:'black'; margin:0; padding:0; font:9pt arial; color:#00ccff;">
+  <TABLE align="center" width="100%" border=1><TR><TD>
+  <TD width ="40%" border=1>
+  <!--==--==--==--==--==--==--==--==-- Text Types --==--==--==--==--==--==--==-->
+  <TABLE Width="100%" border="1">
+      <TR>
+         <TD vertical-align=top>       
+  <FONT style="font-family:Tahoma, Arial;"><b>ToolBox</b></FONT></br><i><u>(use wisely, there is some powerful stuff here)</u></i>
+          
+         </TD>
+      </TR>
+  </TABLE>
+<!--==--==--==--==--==--==--==--==-- Textarea Input --==--==--==--==--==--==--==-->
+  <TABLE Width="100%" border="1">
+      <TR>
+          <TD bgcolor="#999999">
+          <FONT SIZE=2><B><I>Text Area</I></B></FONT>&nbsp; &nbsp;<a ID="TAQ" onclick="TAHelp"><img src="file:///c:\phrasekeys\help.png" 
+		  ALT="Click to see Text Area HELP!" CLASS="helpBub"></a><BR>
+          <CENTER>
+              <TEXTAREA ID="textarea" TITLE="" NAME=Txtarea TABORDER=2 WRAP=PHYSICAL> </TEXTAREA>
+      <TR>
+          <TD bgcolor="#999999">
+          <CENTER>
+		  <input type="button" value="Save Note" onclick="Submitarea">
+          <input type="button" value="Open Note" onclick="OpenTxtArea">
+		  <input type="button" value="Clear Note" onclick="ClearNote"><BR>
+		  <input type="button" class="blubutton" value="Save CompNames" onclick="SaveCompNames">
+		  <input type="button" class="blubutton" value="Open CompNames" onclick="OpenCompNames">
+		  <input type="button" class="blubutton" value="Clear CompNames" onclick="ClearCompNames">
+		  </CENTER>
+          </TD>
+      </TR>
+          </CENTER>
+          </TD>
+      </TR>
+  </TABLE>
+  <!--==--==--==--==--==--==--==--==-- Radio Button --==--==--==--==--==--==--==-->
+  <HR>
+  <TABLE Width="100%" border="0">
+    <TR>
+      <TD>
+      <FONT SIZE=2><CENTER><B><I>Power Options</I></B></FONT>&nbsp; &nbsp;<a ID="POQ" onclick="POHelp"><img src="file:///c:\phrasekeys\help.png" 
+		  ALT="Click to see Power Options HELP!" CLASS="helpBub"></a></CENTER>
+	  <FONT SIZE=1><I><CENTER>(Power Options can be run locally or remotely)</CENTER></I></FONT>
+  <font color="#ffffff"><i><fieldset><legend>Select One</legend></i></font>
+      <CENTER>
+      <input type="radio" style="background-color:#ffff00" checked name="rbtn" value="0"> Reboot 
+      <input type="radio" style="background-color:#00ff00" name="rbtn" value="1"> Scheduled Reboot<BR><BR>
+	  <input type="radio" style="background-color:#ff0000" name="rbtn" value="2"> Shutdown 	  
+      <input type="radio" style="background-color:#ff6600" name="rbtn" value="2"> Scheduled Shutdown 
+      <BR>
+      <BR>
+      <INPUT style="background-color:#cfcfcf" type="Button" Value="Do It!"  onclick="CheckRadio">
+      </CENTER>
+      </TD>
+    </TR>
+  </TABLE> 
+ </TD>
+<BR>
+  <!--==--==--==--==--==--==--= Beginning of Right Side =--==--==--==--==--==-->
+  <!--==--==--==--==--==--==--==-- DropMenu OnChange --==--==--==--==--==--==-->
+  <TD width="40%" border=1 align=center>
+  <FONT SIZE=2><B><I>Phrasekeys</I></B></FONT>&nbsp; &nbsp; &nbsp; &nbsp;<a ID="PKQ" onclick="PKHelp"><img src="file:///c:\phrasekeys\help.png" 
+	ALT="Click to see Phrasekeys HELP!" CLASS="helpBub"></a><BR>
+  <DIV style="float:left;">&nbsp; <FONT SIZE=1><B>Notes Generator</B></FONT></DIV>&nbsp; &nbsp;<FONT SIZE=1><B>Email Generator</B></FONT><BR>
+  <select name="myList" id="myList" onChange="PkWord" size="1" style="width:100px">
+  </select>&nbsp; &nbsp; &nbsp;
+  <select name="myEmails" id="myEmails" onChange="Email" size="1" style="width:220px">
+  </select>
+  <HR>
+  <!--==--==--==--==--==--==--==-- Computer Name Input Field --==--==--==--==--==--==-->
+  <FONT SIZE=2><B><I>Computer name or IP for executing scripted tasks:</I></B></FONT><BR>
+  <input name="CompName" value="" size="18" type="text">
+  <BR>
+  <HR>
+  <BR>
+  <!--==--==--==--==--==--==--==-- Local Multi-Box --==--==--==--==--==--==-->
+  <FONT SIZE=2><B><I>Scripted Tasks:</I></B></FONT>&nbsp; &nbsp;<a ID="STQ" onclick="STHelp"><img src="file:///c:\phrasekeys\help.png" 
+	ALT="Click to see Scripted Tasks HELP!" CLASS="helpBub"></a><BR>
+  <select size="10" name="MultiListBox" multiple>
+  <option value="1">Ping Remote Computer (R)</option>
+  <option value="2">Clean IE Files (L)</option>
+  <option value="3">List Drives & Printers (L/R)</option>
+  <option value="4">Get Machine Info (L/R)</option>
+  <option value="5">See Who Is Logged In (R)</option>
+  <option value="6">Uninstall SCCM (L/R)</option>
+  <option value="7">Check & Repair WMI (L/R)</option>
+  <option value="8">Check for File (R/M)</option>
+  <option value="9">Get BIOS info (L/R)</option>
+  <option value="10">Fix MsiExec (L/R)</option>
+  <option value="11">Clean Temp Directories (L/R/M)</option>
+  <option value="12">Defragment Machine (L/R)</option>
+  <option value="13">Disable Autorun (L/R)</option>
+  <option value="14">Reverse IP Lookup (R)</option>
+  <option value="15">Copy File to Target (R/M)</option>
+  <option value="16">Get My IP Address (L)</option>
+  <option value="17">Schedule Specific Task (L/R/M)</option>
+  <option value="18">Get Serial Number (L/R)</option>
+  <option value="19">Add User/Group to Admin (L/R)</option>
+  <option value="20">"Open CMD Here" to Menu (L)</option>
+  <option value="21">Find .pst files (L/R)</option>
+  <option value="22">Add user to Rem User group(L/R)</option>
+  <option value="23">Check admin group (L/R/M)</option>
+  </select>
+  <BR>
+  <FONT SIZE=2>L = runs locally if computer name field is left blank
+  <BR>R = runs remotely if computer name field is used<BR>M = reads multiple computer names from text file
+  </FONT><BR><BR>
+  <FONT SIZE=1><B><I><U>Specify .txt file containing list of computer names.</U></I></B></FONT><BR>
+<input type="file" style="background-color:#00ccff" name="CompFile" id="CompFile" value="" size="20">
+&nbsp; <input onclick="ClearFileInput()" type="button" value="Clear">
+<BR><BR>
+  <CENTER><input type="button" onClick="RunMultiList" value="Go!"></CENTER>
+  </TD>
+</TD>
+<TD width ="20%" border=1 align=center>
+<BR>
+<FONT SIZE=2><B>Time Tracker</B></FONT><BR><BR><HR>
+<FONT SIZE=2><B><I><U>Ticket Description</U></I></B></FONT><BR>
+<input name="TicketDes" value="" size="16" type="text"><BR><BR>
+<FONT SIZE=2><B><I><U>Task Type</U></I></B></FONT><BR>
+<select name="taskList" id="taskList" onChange="popList" size="1" style="width:120px">
+<option value="1"> </option>
+<option value="2">Campus Cust</option>
+<option value="3">Remote Cust</option>
+<option value="4">Travel</option>
+<option value="5">Lease Roll</option>
+<option value="6">SMS Rem</option>
+<option value="7">OOO Time</option>
+</select><BR><BR>
+<FONT SIZE=2><B><I><U>Sub-Task Type</U></I></B></FONT><BR>
+<select name="subTask" id="subTask" onChange="taskSel" size="1" style="width:120px">
+</select><BR><BR>
+<FONT SIZE=2><B><I><U>Time Spent on Task</U></I></B></FONT><BR>
+<input name="TaskTime" value="" size="3" type="text"><BR><HR>
+<INPUT TYPE=BUTTON onClick="TaskTrack" NAME="Submit Time" VALUE="Submit Time"><BR><BR>
+<INPUT TYPE=BUTTON onClick="ViewTime" NAME="View Time" VALUE="View Time"><BR><HR>
+<FONT SIZE=2><B><I><U>Submit Time in Hours</U></I></B></FONT><BR><BR>
+<FONT SIZE=1>
+10 mins = .17 hours<BR>
+15 mins = .25 hours<BR>
+20 mins = .33 hours<BR>
+30 mins = .5 hours<BR>
+40 mins = .66 hours<BR>
+45 mins = .75 hours<BR>
+50 mins = .83 hours<BR></FONT>
+</TD>
+</TR>
+</TABLE>
+<BR>
+<CENTER><INPUT TYPE=BUTTON onClick="ViewLog" NAME="View Log" VALUE="View Log"> &nbsp; &nbsp; <INPUT TYPE=BUTTON onClick="ClearLog" NAME="Clear Log" VALUE="Clear Log">
+&nbsp; &nbsp; <INPUT TYPE=BUTTON onClick="RepBug" NAME="Report Bug" VALUE="Report Bug"> &nbsp; &nbsp; <INPUT TYPE=BUTTON onClick="MSTSC" NAME="MSTSC" VALUE="MSTSC">
+&nbsp; &nbsp; <INPUT TYPE=BUTTON onClick="CmdP" NAME="CmdP" VALUE="Admin CMD"> &nbsp; &nbsp; <INPUT TYPE=BUTTON onClick="IEsp" NAME="IEsp" VALUE="IE Start Page"></CENTER><BR>
+<CENTER><INPUT TYPE=BUTTON style="background-color:#00ccff; color:#000000;" onClick="PPTInst" NAME="PPTInst" VALUE="Show Instructions"></CENTER>
+<!--==--==--==--==--==--==--==-- Quit --==--==--==--==--==--==-->
+<CENTER>
+<HR Size -1>
+<PRE STYLE="border: 2px thick white; padding: 0; margin: 0;font-family:Tahoma, Arial;" ID=myClock></PRE>
+<BR>
+<INPUT TYPE=BUTTON CLASS="bbutt" STYLE="float:left;" onClick="ChangeLog" NAME="ChangeLog" VALUE="View Changelog">
+<INPUT TYPE=BUTTON CLASS="bbutt" STYLE="float:right;" onClick="CheckUpdate" NAME="CheckUpdate" VALUE="Check for Update"> 
+<INPUT TYPE=BUTTON STYLE="height: 30px; width: 200px; font: bold 16px" NAME="Quit" VALUE="Quit">
+</CENTER>
+</BODY>
+</HTML>
+  
