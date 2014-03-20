@@ -30,6 +30,12 @@
 	color:#ffffff;
 	}
 	
+	.smallbbutt {
+	background-color:#000000;
+	color:#ffffff;
+	Font-size:60%;
+	}
+	
 	.blubutton {
 	Font-size:60%;
 	background-color:#00ccff;
@@ -63,7 +69,7 @@
   strDir = ("C:\Phrasekeys")
 '<!--#################[ Set Dialog Size and Position ]######################-->
       Sub StartUp()
-          window.resizeTo 920,728		  		  
+          window.resizeTo 920,746		  		  
 	  End Sub
       StartUp
 '<!--#################[ Window OnLoad ]######################-->	  
@@ -88,6 +94,50 @@
 	myClock.innerText = now()
 
 	End Sub
+'<!--#####################[ List sorting buttons in text area ]#####################-->
+	Sub goMan
+		userString = document.all("Txtarea").Value
+		userArr = split(userString, vbCrLf)
+		userAnd = MsgBox("Would you like the word 'and' before the last in the list?", vbYesNo, "Make it nice and neat?")
+
+		out = ""
+		for each x in userArr
+			out = out & ", " & x
+		next
+
+		out = Mid(out, 2)
+		'MsgBox Hex(AscW(Right(out, 1)))
+		If  Right(out, 1) <> " " Then
+			'do nothing
+		Else
+			out = Left(out, Len(out) - 2)
+		End If
+		out = Right(out, Len(out) - 1)
+
+		If userAnd = vbYes Then
+			out = split(out, ",")
+			num = UBound(out)
+			lastBlock = out(num)
+			i = 0
+			out2 = ""
+			Do Until i = (num)
+				out2 = out2 & out(i) & ","
+				i = i + 1
+			Loop
+			out2 = out2 & " and" & lastBlock
+		Else
+			out2 = out
+		End If
+	
+		document.all("Txtarea").Value = out2
+	End Sub
+	Sub vert
+		userString = document.all("Txtarea").Value
+		userString = Replace(userString, " and ", " ")
+		userString = Replace(userString, ", ", vbCrLf)
+				
+		document.all("Txtarea").Value = userString	
+	End Sub	
 '<!--#####################[ Notes Text Area ]#####################-->
 	Sub Submitarea
 		Set oFile = fso.OpenTextFile( "C:\Phrasekeys\TextArea.txt",8,true)
@@ -2005,6 +2055,8 @@ End Sub
       <TR>
           <TD bgcolor="#999999">
           <CENTER>
+		  <input type="button" class="smallbbutt" value="V-list to H-list" onclick="goMan">
+		  <input type="button" class="smallbbutt" value="H-list to V-list" onclick="vert"><BR>
 		  <input type="button" value="Save Note" onclick="Submitarea">
           <input type="button" value="Open Note" onclick="OpenTxtArea">
 		  <input type="button" value="Clear Note" onclick="ClearNote"><BR>
