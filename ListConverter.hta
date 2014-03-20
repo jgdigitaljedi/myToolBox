@@ -1,0 +1,145 @@
+<HTML>
+  <HEAD>
+  <TITLE>Make a list into a string</TITLE>
+  <meta http-equiv="x-ua-compatible" content="ie-9">
+      <HTA:APPLICATION
+      Application ID = "List Tool"
+      APPLICATIONNAME = "List Tool"
+      BORDER = "Thick"
+      BORDERSTYLE = "Complex"
+      CAPTION = "Yes"
+      CONTEXTMENU = "yes"
+      INNERBORDER = "yes"
+      MAXIMIZEBUTTON = "yes"
+      MINIMIZEBUTTON = "yes"
+      NAVIGABLE = "yes"
+      SCROLL = "No"
+      SCROLLFLAT = "Yes"
+      SELECTION = "No"
+      SHOWINTASKBAR = "Yes"
+      SINGLEINSTANCE = "Yes"
+      SYSMENU = "yes"
+      VERSION = "0.1"
+      WINDOWSTATE = "Normal"
+      />
+
+<style type="text/css">
+	
+	.bbutt {
+	background-color:#000000;
+	color:#ffffff;
+	}
+	
+	.blubutton {
+	Font-size:60%;
+	background-color:#00ccff;
+	color:#000000; 
+	width:110px;
+	}
+	
+	#textarea {
+	Height:200;
+    Width:100%;
+    font-Size:12;
+    color:#000000;
+    background-color:#ffffe7;
+    font-weight:normal;
+    font-family:MS Sans Serif;
+	}
+	</style>
+	</HEAD>
+  <SCRIPT LANGUAGE="VBScript">
+'<!--#################[ Set Dialog Size and Position ]######################-->
+      Sub StartUp()
+          window.resizeTo 360,376		  		  
+	  End Sub
+      StartUp
+'<!--#################[ Window OnLoad ]######################-->	  
+	  Sub Window_Onload
+		window.offscreenBuffering = True
+		iTimerID = window.setInterval("VbsClock", 1200)
+	  End Sub
+'<!--#################[ Sub for Clock ]######################-->
+	Sub VbsClock
+	myClock.innerText = now()
+
+	End Sub  
+'<!--#################[ Sub to make vertical list into horizontal list ]######################--> 
+	Sub goMan
+		userString = document.all("Txtarea").Value
+		userArr = split(userString, vbCrLf)
+		userAnd = MsgBox("Would you like the word 'and' before the last in the list?", vbYesNo, "Make it nice and neat?")
+
+		out = ""
+		for each x in userArr
+			out = out & ", " & x
+		next
+
+		out = Mid(out, 2)
+		'MsgBox Hex(AscW(Right(out, 1)))
+		If  Right(out, 1) <> " " Then
+			'do nothing
+		Else
+			out = Left(out, Len(out) - 2)
+		End If
+		out = Right(out, Len(out) - 1)
+
+		If userAnd = vbYes Then
+			out = split(out, ",")
+			num = UBound(out)
+			lastBlock = out(num)
+			i = 0
+			out2 = ""
+			Do Until i = (num)
+				out2 = out2 & out(i) & ","
+				i = i + 1
+			Loop
+			out2 = out2 & " and" & lastBlock
+		Else
+			out2 = out
+		End If
+	
+		document.all("Txtarea").Value = out2
+	End Sub
+'<!--#################[ Sub to make horizontal list into vertical list ]######################--> 
+	Sub vert
+		userString = document.all("Txtarea").Value
+		userString = Replace(userString, " and ", " ")
+		userString = Replace(userString, ", ", vbCrLf)
+				
+		document.all("Txtarea").Value = userString	
+	End Sub
+'<!--#############################[ Quit ]#############################-->
+    Sub Quit_onclick
+      Window.Close
+    End Sub
+</script>
+<BODY STYLE="background:'black'; margin:0; padding:0; font:9pt arial; color:#00ccff;">
+<!--==--==--==--==--==--==--==--==-- Textarea Input --==--==--==--==--==--==--==-->
+  <TABLE Width="100%" border="1">
+      <TR>
+          <TD bgcolor="#999999">
+          <FONT SIZE=2><B><I>Enter your list here:</I></B></FONT><BR>
+          <CENTER>
+              <TEXTAREA ID="textarea" TITLE="" NAME=Txtarea TABORDER=2 WRAP=PHYSICAL></TEXTAREA>
+      <TR>
+          <TD bgcolor="#999999">
+          <CENTER>
+		  <input type="button" class="blubutton" value="V-List to H-List" onclick="goMan"> &nbsp; &nbsp;
+		  <input type="button" class="blubutton" value="H-List to V-List" onclick="vert">
+		  </CENTER>
+          </TD>
+      </TR>
+          </CENTER>
+          </TD>
+      </TR>
+  </TABLE>
+  <!--==--==--==--==--==--==--==-- Quit --==--==--==--==--==--==-->
+<CENTER>
+<HR Size -1>
+<PRE STYLE="border: 2px thick white; padding: 0; margin: 0;font-family:Tahoma, Arial;" ID=myClock></PRE>
+<BR>
+<INPUT TYPE=BUTTON STYLE="height: 30px; width: 200px; font: bold 16px" NAME="Quit" VALUE="Quit">
+</CENTER>
+</BODY>
+</HTML>
