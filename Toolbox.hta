@@ -25,6 +25,10 @@
       />
 	<style type="text/css">
 	
+	.normsmall {
+	Font-size: 60%;
+	}
+	
 	.bbutt {
 	background-color:#000000;
 	color:#ffffff;
@@ -69,7 +73,7 @@
   strDir = ("C:\Phrasekeys")
 '<!--#################[ Set Dialog Size and Position ]######################-->
       Sub StartUp()
-          window.resizeTo 920,746		  		  
+          window.resizeTo 908,740		  		  
 	  End Sub
       StartUp
 '<!--#################[ Window OnLoad ]######################-->	  
@@ -1678,6 +1682,16 @@ End Sub
 	objShell.Run "powerpnt.exe " & pFile, 1, False
 	Collect("Scripted Tasks ppsx viewed")
 	End Sub
+'<!--#############################[ Sub for changing your IE home page ]#############################-->
+	Sub IEHome
+		Set objShell = CreateObject("WScript.Shell")
+		newPage = InputBox("What would you like the start page/home page URL to be?", "new home page address")
+		
+		On Error Resume Next
+		'This is the registry path to home page of ie
+		RegLocate = "HKEY_CURRENT_USER\SOFTWARE\Microsoft\Internet Explorer\Main\Start Page"
+		objShell.RegWrite RegLocate,newPage,"REG_SZ"
+	End Sub
 '<!--#############################[ Sub for ChangeLog ]#############################-->
 	Sub ChangeLog
 	If (fso.FileExists("\\txdlls2cdfile08\alma_info\Joey_Thumb\JoeyScripts\shortkeys\ToolBox_changelog.txt")) Then
@@ -1987,9 +2001,10 @@ End Sub
 		Set frontObj = CreateObject("WScript.Shell")
 		frontObj.AppActivate(xlTitle)
 	End Sub
-'<!--#############################[ sub to change IE start page on local machine ]#############################-->
-	Sub IEsp
-
+'<!--#############################[ action for checking for updates ]#############################-->
+	Sub CheckUpdate
+		MsgBox "I had this working when I originally wrote this app at my work because I had a server to host files. I don't have that for the general public yet. I will at some point.",vbOkOnly+vbExclamation, "Feature not added yet"
+	
 	End Sub
 '<!--#############################[ Quit ]#############################-->
     Sub Quit_onclick
@@ -2033,16 +2048,16 @@ End Sub
 			}
 </script>
  <BODY STYLE="background:'black'; margin:0; padding:0; font:9pt arial; color:#00ccff;">
-  <TABLE align="center" width="100%" border=1><TR><TD>
-  <TD width ="40%" border=1>
+  <TABLE align="center" width="100%" border=1>
+  <TD width ="40%" border=1  valign="top" style="margin: 0; padding: 0;">
   <!--==--==--==--==--==--==--==--==-- Text Types --==--==--==--==--==--==--==-->
   <TABLE Width="100%" border="1">
-      <TR>
-         <TD vertical-align=top>       
+      <!--<TR>-->
+         <TD valign=top>       
   <FONT style="font-family:Tahoma, Arial;"><b>ToolBox</b></FONT></br><i><u>(use wisely, there is some powerful stuff here)</u></i>
           
          </TD>
-      </TR>
+      <!--</TR>-->
   </TABLE>
 <!--==--==--==--==--==--==--==--==-- Textarea Input --==--==--==--==--==--==--==-->
   <TABLE Width="100%" border="1">
@@ -2051,15 +2066,15 @@ End Sub
           <FONT SIZE=2><B><I>Text Area</I></B></FONT>&nbsp; &nbsp;<a ID="TAQ" onclick="TAHelp"><img src="file:///c:\phrasekeys\help.png" 
 		  ALT="Click to see Text Area HELP!" CLASS="helpBub"></a><BR>
           <CENTER>
-              <TEXTAREA ID="textarea" TITLE="" NAME=Txtarea TABORDER=2 WRAP=PHYSICAL> </TEXTAREA>
+              <TEXTAREA ID="textarea" TITLE="" NAME=Txtarea TABORDER=2 WRAP=PHYSICAL></TEXTAREA>
       <TR>
           <TD bgcolor="#999999">
           <CENTER>
 		  <input type="button" class="smallbbutt" value="V-list to H-list" onclick="goMan">
 		  <input type="button" class="smallbbutt" value="H-list to V-list" onclick="vert"><BR>
-		  <input type="button" value="Save Note" onclick="Submitarea">
-          <input type="button" value="Open Note" onclick="OpenTxtArea">
-		  <input type="button" value="Clear Note" onclick="ClearNote"><BR>
+		  <input type="button" class="normsmall" value="Save Note" onclick="Submitarea">
+          <input type="button" class="normsmall" value="Open Note" onclick="OpenTxtArea">
+		  <input type="button" class="normsmall" value="Clear Note" onclick="ClearNote"><BR>
 		  <input type="button" class="blubutton" value="Save CompNames" onclick="SaveCompNames">
 		  <input type="button" class="blubutton" value="Open CompNames" onclick="OpenCompNames">
 		  <input type="button" class="blubutton" value="Clear CompNames" onclick="ClearCompNames">
@@ -2093,7 +2108,7 @@ End Sub
   </TABLE> 
  </TD>
 <BR>
-  <!--==--==--==--==--==--==--= Beginning of Right Side =--==--==--==--==--==-->
+  <!--==--==--==--==--==--==--= Beginning of Middle =--==--==--==--==--==-->
   <!--==--==--==--==--==--==--==-- DropMenu OnChange --==--==--==--==--==--==-->
   <TD width="40%" border=1 align=center>
   <FONT SIZE=2><B><I>Phrasekeys</I></B></FONT>&nbsp; &nbsp; &nbsp; &nbsp;<a ID="PKQ" onclick="PKHelp"><img src="file:///c:\phrasekeys\help.png" 
@@ -2186,7 +2201,7 @@ End Sub
 <BR>
 <CENTER><INPUT TYPE=BUTTON onClick="ViewLog" NAME="View Log" VALUE="View Log"> &nbsp; &nbsp; <INPUT TYPE=BUTTON onClick="ClearLog" NAME="Clear Log" VALUE="Clear Log">
 &nbsp; &nbsp; <INPUT TYPE=BUTTON onClick="RepBug" NAME="Report Bug" VALUE="Report Bug"> &nbsp; &nbsp; <INPUT TYPE=BUTTON onClick="MSTSC" NAME="MSTSC" VALUE="MSTSC">
-&nbsp; &nbsp; <INPUT TYPE=BUTTON onClick="CmdP" NAME="CmdP" VALUE="Admin CMD"> &nbsp; &nbsp; <INPUT TYPE=BUTTON onClick="IEsp" NAME="IEsp" VALUE="IE Start Page"></CENTER><BR>
+&nbsp; &nbsp; <INPUT TYPE=BUTTON onClick="CmdP" NAME="CmdP" VALUE="Admin CMD"> &nbsp; &nbsp; <INPUT TYPE=BUTTON onClick="IEHome" NAME="IEHome" VALUE="IE Start Page"></CENTER><BR>
 <CENTER><INPUT TYPE=BUTTON style="background-color:#00ccff; color:#000000;" onClick="PPTInst" NAME="PPTInst" VALUE="Show Instructions"></CENTER>
 <!--==--==--==--==--==--==--==-- Quit --==--==--==--==--==--==-->
 <CENTER>
