@@ -384,10 +384,10 @@
 	var1 = CompName.Value
 	strLComps = CompFile.Value
 
-	Call Buttons(strSelection)
+	strSelection = Inputbox("Would you like this to run (l)ocally, (r)emotely, or on (m)ultiple machines from a text file?", "Choose your adventure!")
 	
 	Select Case strSelection
-		Case "Loc"
+		Case "l"
 			Set wshNetwork = CreateObject("WScript.Network")
 			var1 = wshNetwork.ComputerName
 			var3 = InputBox("Type the full path, command, and/or switches of the task you wish to schedule on this machine.", "Time to get technical!")
@@ -406,7 +406,7 @@
 				objShell.Run strCmd & " " & var1 & " " & var2 & " " & Chr(34) & var3 & Chr(34)
 			End If		
 			Collect("User specified task scheduled on local machine")
-		Case "Rem"
+		Case "r"
 			var1 = CompName.Value
 			var3 = InputBox("Type the full path, command, and/or switches of the task you wish to schedule on " & var1 & ".", "Time to get technical!")
 			var2 = InputBox _
@@ -424,7 +424,7 @@
 				objShell.Run strCmd & " " & var1 & " " & var2 & " " & Chr(34) & var3 & Chr(34)
 			End If
 			Collect("User specified task scheduled on remote machine")
-		Case "Mult"
+		Case "m"
 			var1 = CompFile.Value
 			var3 = InputBox("Type the full path, command, and/or switches of the task you wish to schedule these machines.", "Time to get technical!")
 			var2 = InputBox _
@@ -827,20 +827,13 @@ Sub RemUserG
 		strFileName = InputBox("Enter the name of the file in " & strFilePath & " that you wish to copy to the target.", "File name with extension")
 		strFromPath = strFilePath & "\" & strFileName
 		
-		If strComList <> "" Then
-			Call Buttons(strSelection)
-				Else If strComp = "" Then
-					strSelection = "Loc"
-				Else
-					strSelection = "Rem"
-				End If
-		End If
-		
+		strSelection = Inputbox("Would you like this to run (l)ocally, (r)emotely, or on (m)ultiple machines from a text file?", "Choose your adventure!")
+
 		Select Case(strSelection)
-		Case "Loc"
+		Case "l"
 			MsgBox "There is no local copy option for this task. There are quicker ways to copy a file on this machine to a different place on this machine!", vbOkOnly+vbInformation, "Come on now!"
 			Exit Sub
-		Case "Rem"
+		Case "r"
 			On Error Resume Next
 			strCopToPath = "\\" & strComp & "\c$\Temp\"
 			fso.CopyFile strFromPath, strCopToPath, True				
@@ -850,7 +843,7 @@ Sub RemUserG
 				Else
 					MsgBox strFromPath & " was copied to the C:\Temp directory on " & strComp, vbInformation, "Success!"
 				End If
-		Case "Mult"
+		Case "m"
 			On Error Resume Next
 			Set objRunList = fso.OpenTextFile(strComList, 1)
 			strDisplay = ""
