@@ -358,13 +358,14 @@
 '<!--#######################[ Sub to set a scheduled task for a specified time on remote machine ]#######################-->
 	Sub Scheduled
 		Dim var1, var2, strCmd
-		var1 = CompName.Value
+		'var1 = CompName.Value
+		var1 = strComp
 			If var1 = "" Then
 				Set wshNetwork = CreateObject("WScript.Network")
 				var1 = wshNetwork.ComputerName
 			End If
 		var2 = InputBox _
-		 ("What time would you like this to run? Please use military time and enter with a colon separating the hours and minutes 'HH:MM'")
+		 ("What time would you like this to run? Please use military time and enter with a colon seperating the hours and minutes 'HH:MM'")
 		If Len(var2) <> 5 Then
 			strOops = MsgBox ("You did not enter the time in the proper format! It needs to be 'HH:MM' with the ':' included. Press 'OK' to try again or 'Cancel' to quit."_
 			   , vbOkCancel+vbInformation, "Oops!")
@@ -760,23 +761,24 @@ Sub RemUserG
 		If sFile = vbCancel Then
 			Exit Sub
 		End If
-	Call Buttons(strSelection)
+	'Call Buttons(strSelection)
 	
-	If strCompFile <> "" Then
-		Call Buttons(strSelection)
-	Else If strComputer = "" Then
-		strSelection = "Loc"
-	Else
-		strSelection = "Rem"
-	End If
-	End If
+	'If strCompFile <> "" Then
+	'	Call Buttons(strSelection)
+	'Else If strComputer = "" Then
+	'	strSelection = "Loc"
+	'Else
+	'	strSelection = "Rem"
+	'End If
+	'End If
 	
+	strSelection = InputBox("Would you like to search for the file (l)ocally, on a single (r)emote machine, or on a list of (m)ultiple machines?","How you wanna do this?")	
 		
 	Select Case strSelection
-		Case "Loc"
+		Case "l"
 			MsgBox"To search your machine use the tools built into Windows.", vbOkOnly, "Come on now!"
 			Exit Sub
-		Case "Rem"			
+		Case "r"			
 				If (fso.FileExists("\\" & strComputer & "\c$\" & sFile)) Then
 					objResultsFile.WriteLine(strComputer & " has the requested file!")
 				Else
@@ -789,7 +791,7 @@ Sub RemUserG
 							objResultsFile.Writeline(strComputer & " IS NOT REACHABLE--------------------------------------")
 						End If		
 				End If
-		Case "Mult"
+		Case "m"
 			Set objCompNames = fso.OpenTextFile(strCompFile)
 			Do Until objCompNames.AtEndOfStream
 			strComputer = objCompNames.ReadLine
