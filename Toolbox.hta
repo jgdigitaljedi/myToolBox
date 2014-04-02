@@ -1768,6 +1768,7 @@ End Sub
 		strTaskSel = subTask.Value
 		strWholeTask = strTaskLi & "-" & strTaskSel
 		strTT = TaskTime.Value
+		strX = TaskMultiplier.Value
 		strDes = TicketDes.Value
 		If strTT = "" Then
 			MsgBox "You forgot to enter a the time for the task.", vbExlamation+vbOkOnly, "Try again!"
@@ -1895,48 +1896,56 @@ End Sub
 		Set objExcel = CreateObject("Excel.Application")
 		Set objWkBk = objExcel.Workbooks.Open(strXlPath)
 		objExcel.Visible = False
-		Set objSheet = objExcel.ActiveWorkbook.Worksheets(1)
-		irow = a
-		icol = z
-		cellData = objSheet.Cells(irow, icol).Value
-			If cellData = "" Then
-				cellData = "0"
-			End If		
-		cellData = cellData + strTT
-		objSheet.Cells(irow, icol).Value = cellData
-		Set objSheet = objExcel.ActiveWorkbook.Worksheets(3)
-		strCountRow = 1
-		Do While objSheet.Cells(strCountRow, 1) <> ""
-			strCountRow = strCountRow + 1
-		Loop
 		
-		Select Case(strTaskLi)
-			Case 2
-				strTaskLi = "Campus Cust"
-			Case 3
-				strTaskLi = "Remote Cust"
-			Case 4
-				strTaskLi = "Travel"
-			Case 5
-				strTaskLi = "Lease Roll"
-			Case 6
-				strTaskLi = "SMS"
-			Case 7
-				strTaskLi = "OOO Time"
-		End Select
+		
+		For i = 1 to strX
+		
+			Set objSheet = objExcel.ActiveWorkbook.Worksheets(1)
+			irow = a
+			icol = z
+			cellData = objSheet.Cells(irow, icol).Value
+				If cellData = "" Then
+					cellData = "0"
+				End If		
+			cellData = cellData + strTT
+			objSheet.Cells(irow, icol).Value = cellData
+			Set objSheet = objExcel.ActiveWorkbook.Worksheets(3)
+			strCountRow = 1
+			Do While objSheet.Cells(strCountRow, 1) <> ""
+				strCountRow = strCountRow + 1
+			Loop
+
+			Select Case(strTaskLi)
+				Case 2
+					strTaskLi = "Campus Cust"
+				Case 3
+					strTaskLi = "Remote Cust"
+				Case 4
+					strTaskLi = "Travel"
+				Case 5
+					strTaskLi = "Lease Roll"
+				Case 6
+					strTaskLi = "SMS"
+				Case 7
+					strTaskLi = "OOO Time"
+			End Select
 			
-		objSheet.Cells(strCountRow, 1).Value = strDes
-		objSheet.Cells(strCountRow, 3).Value = strTaskLi
-		objSheet.Cells(strCountRow, 5).Value = strTT
-		objSheet.Cells(strCountRow, 6).Value = dtmToday
-		If strTaskLi = "Travel" Then
-			objSheet.Cells(strCountRow, 1).Interior.Color = RGB(255, 255, 0)
-			objSheet.Cells(strCountRow, 2).Interior.Color = RGB(255, 255, 0)
-			objSheet.Cells(strCountRow, 3).Interior.Color = RGB(255, 255, 0)
-			objSheet.Cells(strCountRow, 4).Interior.Color = RGB(255, 255, 0)
-			objSheet.Cells(strCountRow, 5).Interior.Color = RGB(255, 255, 0)
-			objSheet.Cells(strCountRow, 6).Interior.Color = RGB(255, 255, 0)
-		End If
+			objSheet.Cells(strCountRow, 1).Value = strDes
+			objSheet.Cells(strCountRow, 3).Value = strTaskLi
+			objSheet.Cells(strCountRow, 5).Value = strTT
+			objSheet.Cells(strCountRow, 6).Value = dtmToday
+			If strTaskLi = "Travel" Then
+				objSheet.Cells(strCountRow, 1).Interior.Color = RGB(255, 255, 0)
+				objSheet.Cells(strCountRow, 2).Interior.Color = RGB(255, 255, 0)
+				objSheet.Cells(strCountRow, 3).Interior.Color = RGB(255, 255, 0)
+				objSheet.Cells(strCountRow, 4).Interior.Color = RGB(255, 255, 0)
+				objSheet.Cells(strCountRow, 5).Interior.Color = RGB(255, 255, 0)
+				objSheet.Cells(strCountRow, 6).Interior.Color = RGB(255, 255, 0)
+			End If
+		
+			strTaskLi = taskList.Value
+		Next
+		
 		objWkBk.Save
 		objWkBk.Close
 		
@@ -2178,7 +2187,7 @@ End Sub
 <select name="subTask" id="subTask" onChange="taskSel" size="1" style="width:120px">
 </select><BR><BR>
 <FONT SIZE=2><B><I><U>Time Spent on Task</U></I></B></FONT><BR>
-<input name="TaskTime" value="" size="3" type="text"><BR><HR>
+<input name="TaskTime" value="" size="3" type="text">&nbsp; X &nbsp;<input name="TaskMultiplier" value="1" size="1" type="text"><BR><HR>
 <INPUT TYPE=BUTTON onClick="TaskTrack" NAME="Submit Time" VALUE="Submit Time"><BR><BR>
 <INPUT TYPE=BUTTON onClick="ViewTime" NAME="View Time" VALUE="View Time"><BR><HR>
 <FONT SIZE=2><B><I><U>Submit Time in Hours</U></I></B></FONT><BR><BR>
